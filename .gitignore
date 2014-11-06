@@ -52,3 +52,7 @@ docs/_build/
 
 # PyBuilder
 target/
+
+#### CSCI 5314 custom
+.DS_Store
+*.dat
