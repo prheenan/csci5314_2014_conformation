@@ -56,3 +56,8 @@ target/
 #### CSCI 5314 custom
 .DS_Store
 *.dat
+*.hg*
+*#
+*~
+*output*
+*.orig
