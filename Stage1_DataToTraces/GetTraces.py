@@ -172,3 +172,5 @@ def GetTracesMain(fileNameList):
             dataByObjects, dataByGroups = GetListOfObjectData(f)
             velX,velY,times,numTimes,fretRatio = ProcessData(dataByObjects)
             AnalyzeTraces(velX,velY,times,numTimes,fretRatio)
+            # XXX only works one at a time for now
+            return velX,velY,times,fretRatio

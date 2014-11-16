@@ -16,4 +16,7 @@ testDataType=".dat"
 filesFound=[ testDir+f for f in filesFound if str(f).endswith(testDataType)]
 # just use a single file for this testing bit.
 filesFound = [filesFound[1]]
-GetTraces.GetTracesMain(filesFound)
+# get the X,Y velocity, times, and ratio on a per protein basis
+# each of these is a list. Each element in a list corresponds to data
+# for a single protein
+velX,velY,times,fretRatio = GetTraces.GetTracesMain(filesFound)
