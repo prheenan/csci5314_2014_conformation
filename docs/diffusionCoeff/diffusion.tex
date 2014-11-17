@@ -1,0 +1,173 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Short Sectioned Assignment
+% LaTeX Template
+% Version 1.0 (5/5/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Frits Wenneker (http://www.howtotex.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[paper=a4, fontsize=11pt]{scrartcl} % A4 paper and 11pt font size
+
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\usepackage[english]{babel} % English language/hyphenation
+\usepackage{amsmath,amsfonts,amsthm} % Math packages
+
+
+
+\usepackage{fancyhdr} % Custom headers and footers
+\pagestyle{fancyplain} % Makes all pages in the document conform to the custom headers and footers
+\fancyhead{} % No page header - if you want one, create it in the same way as the footers below
+\fancyfoot[L]{} % Empty left footer
+\fancyfoot[C]{} % Empty center footer
+\fancyfoot[R]{\thepage} % Page numbering for right footer
+\renewcommand{\headrulewidth}{0pt} % Remove header underlines
+\renewcommand{\footrulewidth}{0pt} % Remove footer underlines
+\setlength{\headheight}{13.6pt} % Customize the height of the header
+
+\numberwithin{equation}{section} % Number equations within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{figure}{section} % Number figures within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{table}{section} % Number tables within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs - comment this line for an assignment with lots of text
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}} % Create horizontal rule command with 1 argument of height
+\newcommand{\ndiffn}[3]{\frac{\partial^{#3}#1}{\partial^{#3}#2}}
+\newcommand{\diffn}[2]{\ndiffn{#1}{#2}{}}
+\newcommand{\vect}[1]{\bold{#1}}
+
+\newcommand{\eqs}[1]{
+\begin{align} 
+\begin{split}
+#1
+\end{split}					
+\end{align}}
+
+
+\title{	
+\normalfont \normalsize 
+\textsc{The University of Colorado at Boulder} \\ [25pt] % Your university, school and/or department name(s)
+\horrule{0.5pt} \\[0.4cm] % Thin top horizontal rule
+%\huge Assignment Title \\ % The assignment title
+\horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
+}
+
+\author{Patrick Heenan} % Your name
+
+\date{\normalsize\today} % Today's date or a custom date
+
+\begin{document}
+
+\maketitle % Print the title
+
+%----------------------------------------------------------------------------------------
+%	PROBLEM 1
+%----------------------------------------------------------------------------------------
+
+\section{Diffusion Coefficient in two dimensions}
+
+In two dimensions, the density 'u' of particles freely diffusing in the x-y Cartesian plan of a system of particles is given by:
+
+\eqs{
+\diffn{u}{t} &=  D \nabla u\\ 
+&= D [\ndiffn{u}{x}{2} + \ndiffn{u}{x}{2}] \\
+}
+
+Where D is the diffusion coefficient, with units of [m$^2$]/s. Assuming we know the initial condition of the particles exactly, we can find write the initial location of the particle using $\delta(x)$, which is 1 if x is 0 and 0 otherwise:
+
+\eqs{ u(t_0) = \delta(x-x_0) \times \delta(y-y_0) }
+
+Where we implicitly assume the starting density is normalized to 1. Using separation by variables, we have:
+
+\eqs{ u(x,y,t) = F(x)G(y)H(t)}
+
+\eqs{
+\diffn{u}{t} = F\times G \times \diffn{H}{t}
+&= D [G \times H \times \ndiffn{F}{x}{2} + F \times H \times \ndiffn{G}{Y}{2}] }
+
+Dividing through by u, we have
+
+\eqs{ \frac{1}{D \times H} \diffn{H}{t}
+&= [ \frac{1}{F} \ndiffn{F}{x}{2} + \frac{1}{G} \ndiffn{G}{Y}{2}] }
+
+Both of these sides are equal to some constant, since the left is only dependent on time, and the right is only dependent on x and y:
+
+
+\eqs{
+ \diffn{H}{t} &= -\lambda \times D \times H(t) \\ }
+
+Similarly for F and G: 
+
+\eqs{ \frac{1}{F} \ndiffn{F}{x}{2}  = -(\frac{1}{G} \ndiffn{G}{Y}{2} + \lambda)
+  =-\gamma }
+
+
+So that 
+
+\eqs{
+ \diffn{H}{t} &= -\lambda \times D \times H(t) \\ 
+ \ndiffn{F}{x}{2} &= - \gamma \times F  \\
+\ndiffn{G}{y}{2} &=  -[\lambda - \gamma] \times G  = - \beta \times B}
+
+This can be solved by the normal methods:
+
+\eqs{
+H(t) &= A_h \times e^{-\lambda D \times t} \\
+F(x) &= A_{f,1} \times e^{-\lambda x} + A_{f,2} \times e^{\lambda x} \\
+G(y) &= A_{f,1} \times e^{-\beta y} + A_{f,2} \times e^{\beta x} \\}
+
+Given that x and y are known, we have at u($t_0$) the solution to this system of equations is (Chandrashekhar 1943, equation 172):
+
+\eqs{
+ u(x,y,t) 
+&= \frac{1}{(2 \pi D t)^{3/2}} e^{-\frac{[X - X_0]^2[Y-Y_0]^2}{4 D t}  } \\
+ &=  \frac{1}{(2 \pi D t)^{3/2}} e^{-\frac{|\vect{r} - \vect{r}_0|^2}{4 D t}  }  }
+
+where $\vect{r} = x\hat{x} + y \hat{y}$. Note that this only works when the space for diffusion is much smaller than the characteristic diffusion length $\frac{L^2}{D}$. The mean squared displacement is given by
+
+\eqs{ MSD(t) 
+  &= <(\vect{r} - \vect{r}_0)^2>_{avg} =  ||\vect{r}||^2 + ||\vect{r}_0||^2 - 2 \vect{r_0} <\vect{r}> \\
+}
+
+The appropriate integrals can be calculated:
+
+\eqs{  <\vect{r}>
+ &= \int_{r'=-\infty}^{r'=\infty} u(\vect{r'},t) \vect{r'} d\vect{r' } \\
+&=  \int_{r'=-\infty}^{r'=\infty}
+ \vect{r'} \frac{1}{(2 \pi D t)^{3/2}} e^{-\frac{|\vect{r'} - \vect{r}_0|^2}{4 D t}}  d\vect{r'} \\}
+
+And similarly with $<(\vect{r})^2>$. Using the integral properties shown in (Chandrashekhar 1943, equation 172), we have 
+
+\eqs{ \boxed{MSD = <(\vect{r} - \vect{r}_0)^2>_{avg} = 4 D t }}
+
+For our purposes, we can calculate this value given the X and Y coordinates as:
+
+\eqs{  <(\vect{r} - \vect{r}_0)^2>_{avg}\\
+ &=  <(x_t - x_0)^2 + (y_t-y_0)^2>_{avg}  \\
+&= \frac{1}{N-1} \sum_{t=1}^{N-1} [\Delta X^2 + \Delta Y^2] = 4Dt }
+
+
+
+
+
+
+
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
