@@ -1,6 +1,31 @@
+# use OS for file IO and the like
 import os
-
+# use matplotlib for plotting
 import matplotlib.pyplot  as plt
+# use numpy for array operations
+import numpy as np
+
+def histogramPlot(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
+                  onlyPositive=False):
+    n, bins, patches =\
+                       ax.hist( data, numBins, normed=True,stacked=True,
+                                facecolor='green', alpha=0.75)
+    plt.title(titleStr)
+    plt.ylabel('Norm ' + ylabelStr)
+    plt.xlabel(xlabelStr)
+    plt.yscale('log', nonposy='clip')
+    absoluteNum = len(data)
+    if (onlyPositive):
+        plt.xlim(left=0)
+    yLimNorm = [0.5/absoluteNum,1.05]
+    yLimits= plt.ylim(yLimNorm)
+    plt.grid(True,which='major',color='b')
+    plt.grid(True,which='minor',color='r')
+    # create a twin axis for the absolute count 
+    yLimAbs = np.multiply(yLimNorm,absoluteNum)
+    secondAxis(ax,"Abs " + ylabelStr ,yLimAbs)
+    return ax
+
 
 def secondAxis(ax,label,limits):
     #copies the first axis (ax) and uses it to overlay an axis of limits

@@ -11,6 +11,8 @@ import Utilities as util
 import re
 # use matplotlib for plotting
 import matplotlib.pyplot  as plt
+# use scipy for some stats
+from scipy import stats
 
 # create our pattern using the verbose flag for commenting.
     # http://stackoverflow.com/questions/9507173/python-regex-re-compile-match:
@@ -111,7 +113,13 @@ def getVelocity(xArr,deltaTimeArr):
     return [ np.gradient(x) / deltaTimeArr[i] 
              if np.all(deltaTimeArr[i]) >0 else 0 for i,x in enumerate(xArr)]
 
-def ProcessData(dataByObject,frameRate=0.1):
+def sqDeltaSum(vals):
+    #gives the cummulative sum of the sqaured values of val 
+    # good for calculating the MSD. returns a vector of size N-1
+    delta = np.subtract(vals,vals[0])
+    return np.cumsum(delta*delta)
+
+def ProcessData(dataByObject,frameRate):
     # frameRate is in second
     mSource = "Step1::ProcessData"
     # frames appearing is the first data point
@@ -127,6 +135,8 @@ def ProcessData(dataByObject,frameRate=0.1):
     yIndex = 1
     xVals = [ obj[xyIndex][xIndex] for obj in dataByObject]
     yVals = [ obj[xyIndex][yIndex] for obj in dataByObject]
+    MSD = [ 1/(np.arange(1,1+len(x))) * (sqDeltaSum(x) + sqDeltaSum(y))
+            if len(x) > 1 else np.array([0]) for x,y in zip(xVals,yVals) ]
     velX = getVelocity(xVals,deltaTimes)
     velY = getVelocity(yVals,deltaTimes)
     # channel 1 (FRET donor) is the third
@@ -136,41 +146,97 @@ def ProcessData(dataByObject,frameRate=0.1):
     acceptorIndex = 3
     channel2 = [ obj[acceptorIndex][meanIndex] for obj in dataByObject]
     fretRatio = [ np.divide(c2,c1) for c1,c2 in  zip(channel1,channel2)]
-    return velX,velY,times,numTimes,fretRatio
+    return velX,velY,times,numTimes,fretRatio,MSD
 
-def AnalyzeTraces(velX,velY,times,numTimes,fretRatio):
+def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
     mSource = "Step1::AnalyzeTraces"
+    proteinYStr = '# Proteins'
     numProteins = len(numTimes)
-    numBins = numProteins/100
+    numBins = max(numTimes)-1
     fig = plt.figure()
-    numPlots = 1
-    plotCount = 1
-    ax = fig.add_subplot(numPlots,1,1)
-    vals, xBins, p= ax.hist( numTimes, numBins, normed=1,
-                             facecolor='green', alpha=0.75)
-    plt.title("Raw distribution of protein appearances, N={:d}".format(
-        numProteins))
-    plt.ylabel('Normalized protein histogram (Fraction of total N) ')
-    plt.xlabel('Frames in which protein appeared')
-    plt.yscale('log', nonposy='clip')
-    yLimNorm = [1/numProteins,1.]
-    yLimits= plt.ylim(yLimNorm)
-    plt.grid(True,which='major',color='b')
-    plt.grid(True,which='minor',color='r')
-    # create a twin axis for the absolute count 
-    yLimAbs = np.multiply(yLimNorm,numProteins)
-    util.secondAxis(ax,"Absolute Protein Histogram",yLimAbs)
-    plotCount += 1
+    titleStr = "Raw distribution of protein appearances, N={:d}".format(
+        numProteins)
+    ax = fig.add_subplot(1,1,1)
+    util.histogramPlot(ax,'Frame duration of protein',proteinYStr,
+                       titleStr,numTimes,max(numTimes))
     util.saveFigure(mSource,"Protein_Distribution",fig)
 
-def GetTracesMain(fileNameList):
+    fig = plt.figure(figsize=(16, 12),dpi=500)
+    # save the MSD and R^2 of the MSD
+    numStats = 2
+    msdMatrix = np.zeros((numProteins,numStats))
+    plotCount = 1
+    numPlots = 3
+    plt.subplot(numPlots,1,plotCount)
+    allMSDs = np.concatenate(MSD)
+    allTimes= np.concatenate(times)
+    for i in range(numProteins):
+        # get the X and Y values to fit...
+        tmpMSD = MSD[i]
+        # multiple the times by four, per the diffusion formulae
+        tmpTimes = times[i]*2
+        tmpTimes -= tmpTimes[0]
+        if (len(tmpTimes) < 3):
+            # nothing valid here. set everything to 0 and flag 0 RSQ later
+            # we need at least three values to be able to get a Diffusion Coefficient
+            # and an uncertainty.
+            msdMatrix[i,:] = 0
+            continue
+        # linear fit
+        deg = 1
+        polyVals = np.polyfit(tmpTimes,tmpMSD,deg)
+        polyFunc = np.poly1d(polyVals)
+        fitVals = polyFunc(tmpTimes)
+        slope, intercept, r_value, p_value, std_err = \
+                        stats.linregress(fitVals,tmpMSD)
+        rSquared = r_value**2
+        # MSD (slope) is given by the slope, first coeff returned
+        diffCoeff = polyVals[0]
+        if (diffCoeff < 0):
+            # ignore diffusion coefficients less than 0
+            continue
+        msdMatrix[i,0] = diffCoeff
+        msdMatrix[i,1] = rSquared
+       # s: size in points^2. It is a scalar or an array of the same
+       #length as x and y.
+        plt.plot(tmpTimes,tmpMSD,'r.',markersize=0.5)
+        plt.plot(tmpTimes,fitVals,'b-')
+    plt.ylim(1,max(allMSDs))
+    plt.xlim(frameRate,max(allTimes))
+    plt.yscale('log', nonposy='clip')
+    plt.xscale('log', nonposy='clip')
+    plt.ylabel('Mean Sq Distance, (pixels/second)')
+    plt.xlabel('Time (Seconds)')
+    plotCount += 1
+    goodIndices = np.where(msdMatrix[:,1] > 0)
+    goodMsds = np.take(msdMatrix,goodIndices,axis=0)[0]
+    msdVals =  goodMsds[:,0]
+    # plot the histogram of MSDs
+    ax = fig.add_subplot(numPlots,1,plotCount)
+    numBins = max(msdVals)
+    ax = util.histogramPlot(ax,'MSD (pixels/s)',proteinYStr,
+                            'Histogram of Protein MSD',msdVals,numBins)
+    ax.set_xlim(1,numBins)
+    ax.set_xscale('log')
+    plotCount+=1
+    # plot the rSquared values
+    RSqVals = goodMsds[:,1]*100
+    ax = fig.add_subplot(numPlots,1,plotCount)
+    # use 100 bins for each of the RSq values
+    ax = util.histogramPlot(ax,'R Squared Coeff',proteinYStr,
+                            'Histogram of Protein RSq',RSqVals,100)
+    plt.tight_layout()
+    util.saveFigure(mSource,"MSD",fig)
+        
+
+def GetTracesMain(fileNameList,frameRate=0.1):
     for f in fileNameList:
         if (not os.path.isfile(f)):
             util.ReportError(True,("Could not find file [" +f +"]"),mSource)
         else:
         # POST: tmpFile is a valid filename
             dataByObjects, dataByGroups = GetListOfObjectData(f)
-            velX,velY,times,numTimes,fretRatio = ProcessData(dataByObjects)
-            AnalyzeTraces(velX,velY,times,numTimes,fretRatio)
+            velX,velY,times,numTimes,fretRatio,MSD = ProcessData(dataByObjects,frameRate)
+            AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate)
             # XXX only works one at a time for now
             return velX,velY,times,fretRatio
