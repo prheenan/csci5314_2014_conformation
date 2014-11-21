@@ -149,6 +149,8 @@ def ProcessData(dataByObject,frameRate):
     # channel 2 (FRET acceptor) is the fourth
     acceptorIndex = 3
     channel2 = [ obj[acceptorIndex][meanIndex] for obj in dataByObject]
+    print(channel1)
+    print(channel2)
     #FRET Ratio is donor/acceptor (1/2)
     fretRatio = [ np.divide(c2,c1) for c1,c2 in  zip(channel1,channel2)]
     return velX,velY,times,numTimes,fretRatio,MSD
