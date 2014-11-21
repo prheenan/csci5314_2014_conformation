@@ -7,12 +7,16 @@ import sys
 sys.path.append('../Utilities')
 # import the util file.
 import Utilities as util
+# import the plotting utility file
+import PlotUtilities as plotUtil
 # use the regular expression generator for parsing the files
 import re
 # use matplotlib for plotting
 import matplotlib.pyplot  as plt
 # use scipy for some stats
 from scipy import stats
+# import the colormap
+import matplotlib.cm as cm
 
 # create our pattern using the verbose flag for commenting.
     # http://stackoverflow.com/questions/9507173/python-regex-re-compile-match:
@@ -145,6 +149,7 @@ def ProcessData(dataByObject,frameRate):
     # channel 2 (FRET acceptor) is the fourth
     acceptorIndex = 3
     channel2 = [ obj[acceptorIndex][meanIndex] for obj in dataByObject]
+    #FRET Ratio is donor/acceptor (1/2)
     fretRatio = [ np.divide(c2,c1) for c1,c2 in  zip(channel1,channel2)]
     return velX,velY,times,numTimes,fretRatio,MSD
 
@@ -153,21 +158,20 @@ def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
     proteinYStr = '# Proteins'
     numProteins = len(numTimes)
     numBins = max(numTimes)-1
-    fig = plt.figure()
-    titleStr = "Raw distribution of protein appearances, N={:d}".format(
-        numProteins)
+    fig = plotUtil.pFigure()
+    titleStr = "Raw distribution of protein appearances"
     ax = fig.add_subplot(1,1,1)
-    util.histogramPlot(ax,'Frame duration of protein',proteinYStr,
+    plotUtil.histogramPlot(ax,'Frame duration of protein',proteinYStr,
                        titleStr,numTimes,max(numTimes))
-    util.saveFigure(mSource,"Protein_Distribution",fig)
+    plotUtil.saveFigure(mSource,"Protein_Distribution",fig)
 
-    fig = plt.figure(figsize=(16, 12),dpi=500)
+    fig = plotUtil.pFigure()
     # save the MSD and R^2 of the MSD
     numStats = 2
     msdMatrix = np.zeros((numProteins,numStats))
     plotCount = 1
-    numPlots = 3
-    plt.subplot(numPlots,1,plotCount)
+    numPlots = 2
+    msdAx = plt.subplot(numPlots,1,plotCount)
     allMSDs = np.concatenate(MSD)
     allTimes= np.concatenate(times)
     for i in range(numProteins):
@@ -197,36 +201,50 @@ def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
             continue
         msdMatrix[i,0] = diffCoeff
         msdMatrix[i,1] = rSquared
-       # s: size in points^2. It is a scalar or an array of the same
-       #length as x and y.
-        plt.plot(tmpTimes,tmpMSD,'r.',markersize=0.5)
-        plt.plot(tmpTimes,fitVals,'b-')
-    plt.ylim(1,max(allMSDs))
-    plt.xlim(frameRate,max(allTimes))
-    plt.yscale('log', nonposy='clip')
-    plt.xscale('log', nonposy='clip')
-    plt.ylabel('Mean Sq Distance, (pixels/second)')
-    plt.xlabel('Time (Seconds)')
-    plotCount += 1
-    goodIndices = np.where(msdMatrix[:,1] > 0)
-    goodMsds = np.take(msdMatrix,goodIndices,axis=0)[0]
+    rawRsqVals = msdMatrix[:,1]
+    goodIndices = np.where(rawRsqVals > 0)[0]
+    goodMsds = np.take(msdMatrix,goodIndices,axis=0)
     msdVals =  goodMsds[:,0]
     # plot the histogram of MSDs
     ax = fig.add_subplot(numPlots,1,plotCount)
     numBins = max(msdVals)
-    ax = util.histogramPlot(ax,'MSD (pixels/s)',proteinYStr,
-                            'Histogram of Protein MSD',msdVals,numBins)
-    ax.set_xlim(1,numBins)
-    ax.set_xscale('log')
+    axTmp = plotUtil.histogramPlot(ax,'Diffusion Coeff (pixels^2/second)',
+                                   proteinYStr,
+                                   'Histogram of Protein DIffusion Coeffs',
+                                   msdVals,numBins)
+    axTmp.set_xlim(1,numBins)
+    axTmp.set_xscale('log')
     plotCount+=1
     # plot the rSquared values
     RSqVals = goodMsds[:,1]*100
+    # RSQ is between 0 and 1, multiply by 100 and fit with 100 bins for 'simple' normalization
+    numBinsRsq= 100 
     ax = fig.add_subplot(numPlots,1,plotCount)
     # use 100 bins for each of the RSq values
-    ax = util.histogramPlot(ax,'R Squared Coeff',proteinYStr,
-                            'Histogram of Protein RSq',RSqVals,100)
+    plotUtil.histogramPlot(ax,'R Squared Coeff',proteinYStr,
+                            'Histogram of Protein RSq',RSqVals,numBinsRsq)
+    plotCount += 1
+    # next, we plot a comparison of the 'raw', 'valid' (D with uncertainty), and 'processed'
+    # (D fit with RSQ > 0.8)
+    cutoffRsq = 0.8
     plt.tight_layout()
-    util.saveFigure(mSource,"MSD",fig)
+    plotUtil.saveFigure(mSource,"MSD",fig)
+    
+    titleStr = proteinYStr
+    xStr = 'Frames Appearing'
+    xLimit = [1,max(numTimes)]
+    bestIndices = np.where(rawRsqVals > cutoffRsq)[0]
+    # make labels for each of the indices ('Raw' is assumed...)
+    compLabel = ["All Proteins","Valid Diffusion Coeffs",
+                        ("RSQ > {:.3f}".format(cutoffRsq))]
+    comparisonIndices = [goodIndices,bestIndices]
+    plotUtil.comparisonPlot(xStr,proteinYStr,titleStr,xLimit,numTimes,
+                            comparisonIndices,compLabel,mSource)
+    # XXX TODO: compare other options (e.g. x velocity, y velcocity, etc)
+    # XXX TODO: try for all files, need a better way to store
+    # return all the diffusion coeffs, as well as the 'best' indices we found
+    return msdMatrix[:,0],bestIndices
+    
         
 
 def GetTracesMain(fileNameList,frameRate=0.1):
@@ -237,6 +255,16 @@ def GetTracesMain(fileNameList,frameRate=0.1):
         # POST: tmpFile is a valid filename
             dataByObjects, dataByGroups = GetListOfObjectData(f)
             velX,velY,times,numTimes,fretRatio,MSD = ProcessData(dataByObjects,frameRate)
-            AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate)
+            diffCoeffs,bestIndices = \
+                                     AnalyzeTraces(velX,velY,times,numTimes,
+                                                   fretRatio,MSD,frameRate)
+            
             # XXX only works one at a time for now
-            return velX,velY,times,fretRatio
+            atGoodIndices =\
+            util.saveAllAtIndices([times,numTimes,fretRatio,MSD,diffCoeffs],
+                                  ['Per_Protein_Frames_Appearing','Per_Protein_Num_Frames',
+                                   'Per_Protein_Fret_Ratio','MSD_Per_Protein',
+                                   'Per_Protein_Diff_Coeff'],
+                                  ['Post_Stage1_Analysis'],bestIndices)
+            goodTimes , ignore, goodFRET , ignore,goodDiff = atGoodIndices
+            return goodTimes,goodFRET,goodDiff

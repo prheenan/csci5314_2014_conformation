@@ -19,4 +19,4 @@ filesFound = [filesFound[1]]
 # get the X,Y velocity, times, and ratio on a per protein basis
 # each of these is a list. Each element in a list corresponds to data
 # for a single protein
-velX,velY,times,fretRatio = GetTraces.GetTracesMain(filesFound)
+trackedTimes,trackedFRET,trackedDiffusion = GetTraces.GetTracesMain(filesFound)
