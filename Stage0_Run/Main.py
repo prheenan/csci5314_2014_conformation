@@ -3,8 +3,11 @@ import os
 # include sys to add things to the path
 import sys
 sys.path.append('../Stage1_DataToTraces/')
+sys.path.append('../Stage2_TracesToPhyscs/')
 # import the traces file
 import GetTraces
+import GetPhysics
+import numpy as np
 
 # XXX below lines test this functioon
 testDir="../Data/ObjTr/"
@@ -19,4 +22,13 @@ filesFound = [filesFound[1]]
 # get the X,Y velocity, times, and ratio on a per protein basis
 # each of these is a list. Each element in a list corresponds to data
 # for a single protein
-trackedTimes,trackedFRET,trackedDiffusion = GetTraces.GetTracesMain(filesFound)
+#trackedTimes,trackedFRET,trackedDiffusion = GetTraces.GetTracesMain(filesFound)
+# XXX functionaliz below.
+stage1Folder = "../output/Post_Stage1_Analysis/"
+timeFile = stage1Folder + "Per_Protein_Frames_Appearing.npy"
+diffFile = stage1Folder + "Per_Protein_Diff_Coeff.npy"
+fretFile = stage1Folder + "Per_Protein_Fret_Ratio.npy"
+trackedTimes= np.load(timeFile)
+trackedFRET= np.load(fretFile)
+trackedDiffusion = np.load(diffFile)
+GetPhysics.GetPhysicsMain(trackedTimes,trackedFRET,trackedDiffusion)

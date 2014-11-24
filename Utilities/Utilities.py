@@ -5,6 +5,15 @@ import numpy as np
 # Use CSV for writing human readable files
 import csv
 
+def takeSubset(original,indices):
+    toReturn= original
+    for arr in indices:
+#        print(arr)
+#        print(toReturn)
+        toReturn = np.take(toReturn,arr)
+#        print(toReturn)
+    return toReturn
+
 def ReportError(isFatal=False, description="None Given",source="None Given"):
     ReportMessage("Error [" + description +"]",source)
     if (isFatal):
@@ -66,7 +75,6 @@ def saveAll(matricesToSave,labels,thisPath):
 
 def saveAllAtIndices(matricesToSave,labels,thisPath,indices):
     endMatrices = []
-    print(indices)
     for i,m in enumerate(matricesToSave):
         tmpArr = np.array(m)[indices]
         endMatrices.append(tmpArr)

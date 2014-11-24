@@ -9,39 +9,56 @@ import matplotlib.pyplot  as plt
 import numpy as np
 
 def normalizedBins(array):
+    # return the 'normalized' bins or bins numbers for histogramming
     return 100
+
+def normalizeTo(normalArr,toNorm):
+    # normalize toNorm to the array 'normalArr', according to histNormalize.
+    # good for plotting!
+    ignore,minV,maxV = histNormalize(normalArr)
+    toRet,ignore,ignore = histNormalize(toNorm,minV,maxV)    
+    return toRet
 
 def histNormalize(histIn,minV=-1,maxV=-1):
     # histograms are only truly normal if we use bins of size 0.1
     # so, normalize the values to between 0 and 1, use size of since 0.1
     if (minV < 0):
-        minV = min(histIn)
+        minV = np.min(histIn)
     if (maxV < 0):
-        maxV = max(histIn)
+        maxV = np.max(histIn)
     # normalize the histogram and center between 0 and 1 for normal plotting
-    normalizedHist = 100 *(histIn - minV)/(maxV-minV)
+    normalizedHist = normalizedBins(histIn) *(histIn - minV)/(maxV-minV)
     return normalizedHist,minV,maxV
 
 
 def histogramPlot(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
-                  secondX = False, absoluteNum=-1):
-    n, bins, patches =ax.hist( data, numBins, normed=True,stacked=True,
-                                facecolor='green', alpha=0.75)
-    if (absoluteNum < 0):
-        absoluteNum = len(data)
-    t = plt.title(titleStr +  getNStr(absoluteNum))
+                  secondX = False,Normalize=False):
+    numPoints = len(data)
+
+    t = plt.title(titleStr +  getNStr(numPoints))
+    if (Normalize):
+        # if we are normalizing, the absolute number is the max of the data...
+        absoluteNum = np.max(data)
+        data,ignoreMin,ignoreMax = histNormalize(data)
+        numBins = normalizedBins(data)
+    else:
+        absoluteNum = numPoints
+    # POST: data and absolute scaling number are set
     if (secondX):
         t.set_y(1.4)
-    ax.set_ylabel('Norm ' + ylabelStr)
+        secondAxis(ax,'Absolute' + xlabelStr,[0,absoluteNum],False)
+    n, bins, patches =ax.hist( data, numBins, normed=True,stacked=True,
+                                facecolor='green', alpha=0.75)
     ax.set_xlabel(xlabelStr)
+    ax.set_ylabel('Norm ' + ylabelStr)
     ax.set_yscale('log', nonposy='clip')
     # limits are half of an individual to slightly more than the entire population
-    yLimNorm = [0.5/absoluteNum,2]
+    yLimNorm = [0.5/numPoints,2]
     yLimits= plt.ylim(yLimNorm)
     ax.grid(True,which='major',color='b')
     ax.grid(True,which='minor',color='r')
     # create a twin axis for the absolute count 
-    yLimAbs = np.multiply(yLimNorm,absoluteNum)
+    yLimAbs = np.multiply(yLimNorm,numPoints)
     secondAxis(ax,"Abs " + ylabelStr ,yLimAbs)
     return ax
 
@@ -71,46 +88,63 @@ def saveFigure(source,fileName,figure):
     formatStr = "png"
     figure.savefig(fullPath + '.' + formatStr,format=formatStr, 
                    dpi=figure.get_dpi())
+    plt.close(figure)
 
-def pFigure(ySize=8,xSize=6,dpiArg=100):
+def pFigure(ySize=10,xSize=8,dpiArg=100):
     return  plt.figure(figsize=(ySize,xSize),dpi=dpiArg)
 
 def getNStr(n,space = " "):
     return space + "n={:d}".format(n)
 
-def comparisonPlot(xStr,yStr,titleStr,xLimit,rawValues,indices,
+
+def compareHist(xStr,yStr,titleStr,xLimit,matrices,
                    compLabel,mSource):
     # we will plot the 'raw' values, plus whatever is in indices
-    numPlots = len(indices)+1
+    numPlots = len(matrices)
     # first plot: raw times
     fig = pFigure()
     plotCount = 1
     ax = fig.add_subplot(numPlots,1,plotCount)
-    rawValues = np.array(rawValues)
-    normStrX = 'Normalized ' + xStr
-    absStrX = 'Absolute ' + xStr
+    rawValues = np.array(matrices[0])
     normRaw,minV,maxV = histNormalize(rawValues)
     bins = normalizedBins(normRaw)
     # plot the normalizd number of frames, and add on an x label
     # for the absolute number
-    maxCounts = len(normRaw)
-    axTmp = histogramPlot(ax,normStrX,yStr,
-                          titleStr + compLabel[1],normRaw,
-                          bins,True,maxCounts)
+    axTmp = histogramPlot(ax,xStr,yStr,
+                          titleStr + compLabel[0],normRaw,
+                          bins,True)
+    xlimits = axTmp.get_xlim()
     plotCount += 1
-    secondAxis(axTmp,absStrX,xLimit,False)
     for i in range(numPlots-1):
         # now we plot the values are their given indices
-        tmpHist = rawValues[indices[i]]        
+        tmpHist = matrices[i+1]       
         # ignore the 'new' min an max, plot according to the 'raw' values.
         # this ensures that our x axes are all the same
         normHist,junk1,junk2 = histNormalize(tmpHist,minV,maxV)
+        # get the number of bins such that each are of length 1
+        numBins = round(max(normHist))
         # second plot: 'good' times
         ax = fig.add_subplot(numPlots,1,plotCount)
-        axTmp = histogramPlot(ax,normStrX,yStr,
+        axTmp = histogramPlot(ax,xStr,yStr,
                               titleStr + compLabel[i+1],
-                              normHist,bins)
+                              normHist,numBins)
+        axTmp.set_xlim(xlimits)
         plotCount += 1
     # XXX need to save by other file name, also ...
     fileStr = 'Histogram' + titleStr
     saveFigure(mSource,fileStr,fig)
+
+
+def comparisonPlot(xStr,yStr,titleStr,xLimit,rawValues,indices,
+                   compLabel,mSource):
+    # we will plot the 'raw' values, plus whatever is in indices
+    rawValues = np.array(rawValues)
+    toCompare = [rawValues]
+    # number of plots (besides the raw)...
+    numPlots = len(indices)
+    for i in range(numPlots):
+        # now we plot the values are their given indices
+        toCompare.append(rawValues[indices[i]])
+    # call compare hist with the 'subset' we want
+    compareHist(xStr,yStr,titleStr,xLimit,toCompare,compLabel,mSource)
+        

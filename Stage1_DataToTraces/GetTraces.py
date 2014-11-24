@@ -92,7 +92,7 @@ def GetListOfObjectData(f):
                 # POST: have all the first and second values for this object
                 toAdd =  [objFirstVals, objSecondVals]
                 allObjects.append(toAdd)
-                dataByGroups.append(allObjects)
+            dataByGroups.append(allObjects)
     else:
         util.ReportError(True,
                          ("Could not match file [" + f +"] to regex"),
@@ -111,6 +111,8 @@ def GetListOfObjectData(f):
             toAppend = dataByGroups[dataType][objNum]
             thisObj.append(toAppend)
         dataByObjects.append(thisObj)
+    util.ReportMessage("Processed: [" + str(numObjects) 
+                       + "] points for [" + str(numMatches) + "]",mSource)
     return dataByObjects, dataByGroups
 
 def getVelocity(xArr,deltaTimeArr):    
@@ -149,22 +151,28 @@ def ProcessData(dataByObject,frameRate):
     # channel 2 (FRET acceptor) is the fourth
     acceptorIndex = 3
     channel2 = [ obj[acceptorIndex][meanIndex] for obj in dataByObject]
-    print(channel1)
-    print(channel2)
     #FRET Ratio is donor/acceptor (1/2)
-    fretRatio = [ np.divide(c2,c1) for c1,c2 in  zip(channel1,channel2)]
+    # XXX should probably check for a div/0 here...
+    channel1Flatten=np.concatenate(channel1)
+    channel2Flatten=np.concatenate(channel2)
+    maxXAxis = max(len(channel1Flatten),len(channel2Flatten))
+    fretRatio = [ np.divide(c1,c2) for c1,c2 in  zip(channel1,channel2)]
+    toCompare = [channel1Flatten,channel2Flatten]
+    plotUtil.compareHist('Intensity (au)','Protein Count','FRET Intensities'
+                         ,maxXAxis,toCompare,
+                         ['Donor Channel','Acceptor Channel'],mSource)
     return velX,velY,times,numTimes,fretRatio,MSD
 
 def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
     mSource = "Step1::AnalyzeTraces"
     proteinYStr = '# Proteins'
     numProteins = len(numTimes)
-    numBins = max(numTimes)-1
+    numBins = max(numTimes)
     fig = plotUtil.pFigure()
     titleStr = "Raw distribution of protein appearances"
     ax = fig.add_subplot(1,1,1)
     plotUtil.histogramPlot(ax,'Frame duration of protein',proteinYStr,
-                       titleStr,numTimes,max(numTimes))
+                           titleStr,numTimes,numBins)
     plotUtil.saveFigure(mSource,"Protein_Distribution",fig)
 
     fig = plotUtil.pFigure()
@@ -210,12 +218,11 @@ def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
     # plot the histogram of MSDs
     ax = fig.add_subplot(numPlots,1,plotCount)
     numBins = max(msdVals)
+    numProteins = len(msdVals)
     axTmp = plotUtil.histogramPlot(ax,'Diffusion Coeff (pixels^2/second)',
                                    proteinYStr,
-                                   'Histogram of Protein DIffusion Coeffs',
+                                   'Histogram of Protein Hiffusion Coeffs',
                                    msdVals,numBins)
-    axTmp.set_xlim(1,numBins)
-    axTmp.set_xscale('log')
     plotCount+=1
     # plot the rSquared values
     RSqVals = goodMsds[:,1]*100
@@ -247,8 +254,6 @@ def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
     # return all the diffusion coeffs, as well as the 'best' indices we found
     return msdMatrix[:,0],bestIndices
     
-        
-
 def GetTracesMain(fileNameList,frameRate=0.1):
     for f in fileNameList:
         if (not os.path.isfile(f)):
