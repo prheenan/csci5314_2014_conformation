@@ -20,15 +20,13 @@ def getMinimumTime(values,times,value,lessThanBool=False):
     minimumTimes = -1 * np.ones((len(values),1))
     # the times to interpolate the times. XXX probably 
     # want to make this a constant of some kind.
-    numPoints = 100000
-    maxTime = np.max(np.concatenate(times))
-    maxValue = np.max(np.concatenate(values))
-    timeInterp = np.linspace(0,maxTime,numPoints)
-    listInterp = np.linspace(0,maxValue,numPoints)
+    numPoints = 1000
+    # get the bounds for interpolation
+    # get the interpolation grid
     for i,listV in enumerate(values):
         timeRaw = times[i]
-        timeInterp = np.interp(timeInterp,timeRaw,timeRaw)
-        listTmp = np.interp(timeInterp,timeRaw,listV)
+        timeGrid = np.linspace(0,np.max(timeRaw),numPoints)
+        listTmp = np.interp(timeGrid,timeRaw,listV)
         # need to make sure we start below the lower bound
         # or send above the upper bound
         lessThan =(listTmp < value)
@@ -41,7 +39,7 @@ def getMinimumTime(values,times,value,lessThanBool=False):
             continue
         diffArr = (listTmp-value)**2
         firstIndex = np.argmin(diffArr)
-        bestTime = timeInterp[firstIndex]
+        bestTime = timeGrid[firstIndex]
         minimumTimes[i] = bestTime
     return minimumTimes
 
@@ -121,7 +119,7 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     # the clusters give us the 'folded' and 'unfolded' groups. between those, we have
     # a fairly undefined state.
     folded = min(clusters)
-    unfolded = max(clusters)*0.8
+    unfolded = max(clusters)
     clusters = [unfolded,folded]
     
     folded = getMinimumTime(distances,times,folded,True)

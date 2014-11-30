@@ -56,7 +56,8 @@ def humanReadableSave(listToSave,fileName,header):
         try:
             writeObj.writerows(listToSave)
         except csv.Error as e:
-            ReportError(False,str(e),"Utility::humanReadableSave")
+            ReportMessage(str(e) + ",probably just writing a single-element list. no worries."
+                    ,"Utility::humanReadableSave")
             writeObj.writerow(listToSave)
 
 def saveAll(matricesToSave,labels,thisPath):
