@@ -16,6 +16,7 @@ for f in foldersToImport:
 # python files are named, just import that: "GetTraces.py" --> GetTraces)
 import GetTraces
 import GetPhysics
+import Utilities
 import numpy as np
 
 # XXX below lines test this functioon
@@ -26,8 +27,12 @@ filesFound=sorted(os.listdir(testDir))
 testDataType=".dat"
 # append path to files, since os.listdir just returns file name
 filesFound=[ testDir+f for f in filesFound if str(f).endswith(testDataType)]
+if (len(filesFound) < 1):
+    msg = "Couldn't find any file like [{}] in [{}]".format(testDataType,
+                                                        testDir)
+    Utilities.ReportError(True,msg,"Main.py")
 # just use a single file for this testing bit.
-filesFound = [filesFound[1]]
+filesFound = [filesFound[0]]
 # get the X,Y velocity, times, and ratio on a per protein basis
 # each of these is a list. Each element in a list corresponds to data
 # for a single protein

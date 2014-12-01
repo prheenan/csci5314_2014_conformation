@@ -29,16 +29,21 @@ def getMinimumTime(values,times,value,lessThanBool=False):
         listTmp = np.interp(timeGrid,timeRaw,listV)
         # need to make sure we start below the lower bound
         # or send above the upper bound
-        lessThan =(listTmp < value)
-        greaterThan = (listTmp > value)        
+        lessThan =(listTmp <= value)
+        greaterThan = (listTmp >= value)        
         if (lessThanBool):
             toTest = lessThan
         else:
             toTest= greaterThan
-        if np.all(toTest):
+        # if our condition isn't true for any time,
+        # ignore the protein (ie: it wasn't ever less than
+        # the lower bound or greater than the upper bound)
+        if not np.any(toTest):
             continue
+        # look for the lowest squared difference from the desired value.
         diffArr = (listTmp-value)**2
         firstIndex = np.argmin(diffArr)
+        # get the best interpolated time.
         bestTime = timeGrid[firstIndex]
         minimumTimes[i] = bestTime
     return minimumTimes
@@ -122,8 +127,8 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     unfolded = max(clusters)
     clusters = [unfolded,folded]
     
-    folded = getMinimumTime(distances,times,folded,True)
-    unfolded = getMinimumTime(distances,times,unfolded,False)
+    folded = getMinimumTime(distances,times,folded,False)
+    unfolded = getMinimumTime(distances,times,unfolded,True)
     diffTime, definedUnfoldingIdx = getDifferentialTime(folded,unfolded)
 
     goodDiff = util.takeSubset(goodDiff,
