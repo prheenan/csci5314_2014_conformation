@@ -76,14 +76,11 @@ def secondAxis(ax,label,limits,secondY =True):
         ax2.set_xlim(limits)
         ax2.set_xlabel(label)
 
-def saveFigure(source,fileName,figure):
+def saveFigure(figure,fileName):
     # source : where to save the output iunder the output folder
     # filename: what to save the file as. automagically saved as high res pdf
-    defaultOutputDir = util.defaultOutputDir()
-    util.ensureDirExists(defaultOutputDir)
-    sourceOutputDir = defaultOutputDir + source +'/'
-    util.ensureDirExists(sourceOutputDir)
-    fullPath = sourceOutputDir + fileName
+    step = util.globalIO.st
+    fullPath = util.globalIO.getOutputDir([step],fileName)
     plt.tight_layout(False)
     formatStr = "png"
     figure.savefig(fullPath + '.' + formatStr,format=formatStr, 
@@ -98,7 +95,7 @@ def getNStr(n,space = " "):
 
 
 def compareHist(xStr,yStr,titleStr,xLimit,matrices,
-                   compLabel,mSource):
+                   compLabel):
     # we will plot the 'raw' values, plus whatever is in indices
     numPlots = len(matrices)
     # first plot: raw times
@@ -132,11 +129,11 @@ def compareHist(xStr,yStr,titleStr,xLimit,matrices,
         plotCount += 1
     # XXX need to save by other file name, also ...
     fileStr = 'Histogram' + titleStr
-    saveFigure(mSource,fileStr,fig)
+    saveFigure(fig,fileStr)
 
 
 def comparisonPlot(xStr,yStr,titleStr,xLimit,rawValues,indices,
-                   compLabel,mSource):
+                   compLabel):
     # we will plot the 'raw' values, plus whatever is in indices
     rawValues = np.array(rawValues)
     toCompare = [rawValues]
@@ -146,5 +143,5 @@ def comparisonPlot(xStr,yStr,titleStr,xLimit,rawValues,indices,
         # now we plot the values are their given indices
         toCompare.append(rawValues[indices[i]])
     # call compare hist with the 'subset' we want
-    compareHist(xStr,yStr,titleStr,xLimit,toCompare,compLabel,mSource)
+    compareHist(xStr,yStr,titleStr,xLimit,toCompare,compLabel)
         

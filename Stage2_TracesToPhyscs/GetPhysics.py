@@ -157,7 +157,7 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
                            len(diffTime)/100,True,True)
 
 
-    plotUtil.saveFigure(source,'tmp2',fig)
+    plotUtil.saveFigure(fig,'tmp2')
     # return the good unfolding times and differential coefficients
     return diffTime,goodDiff
 

@@ -5,30 +5,67 @@ import numpy as np
 # Use CSV for writing human readable files
 import csv
 
+
+class outputHelper:
+    globalOutput = "../output"
+    def __init__(self):
+        self.Trial = "No Trial"
+        self.fil = "No File" 
+        self.st = "No Step"
+    def setTrial(self,Trial):
+        self.trial = Trial
+    def setFile(self,File):
+        self.fil = File
+    def setStep(self,step):
+        self.st = step
+    def getOutputDir(self,path, fileName = ""):
+        # path is a list of paths
+        if (fileName == -1):
+            fileName = self.st
+        tmpPath = [ [self.trial, self.fil],path[:]]
+        sepPath =np.concatenate(tmpPath)
+        path = ensurePathExists(outputHelper.globalOutput,
+                                sepPath)
+        return path+fileName
+
+globalIO = outputHelper()
+
+def loadAll(folder,files):
+    arr = []
+    # loop through all the desired files and load them if we need them.
+    for f in files:
+        path = folder + f
+        if (not os.path.isfile(path)):
+            Utilities.ReportError(True,"In Utilities::loadAll, couldn't find " +
+                                  path)
+        # POST: path is to a valid filename
+        arr.append(np.load(path))
+    return arr
+
 def takeSubset(original,indices):
     toReturn= original
     for arr in indices:
-#        print(arr)
-#        print(toReturn)
         toReturn = np.take(toReturn,arr)
-#        print(toReturn)
     return toReturn
 
-def ReportError(isFatal=False, description="None Given",source="None Given"):
+def ReportError(isFatal=False, description="None Given",source="-1"):
     ReportMessage("Error [" + description +"]",source)
     if (isFatal):
         print("\tError was fatal. Exiting.")
         exit(-1)
 
-def ReportMessage(description="None Given",source="None Given"):
+def ReportMessage(description="None Given",source="-1"):
+    if (source == "-1"):
+        source = globalIO.st
     print("Message [" + str(description) + "] Received by [" 
           + str(source) + "]")
 
-def defaultOutputDir():
-    return "../output/"
+def dirExists(directory):
+    return os.path.exists(directory)
 
 def ensureDirExists(directory):
-    if not os.path.exists(directory):
+    # make the directory if it isn't there!
+    if not dirExists(directory):
         os.makedirs(directory)
 
 def ensurePathExists(globalOutput,subPaths):
@@ -65,8 +102,7 @@ def saveAll(matricesToSave,labels,thisPath):
     # labels: a list of labels to put in the headers of the matrices
     # global output: a single, global output folder
     # thispath: a list of N strings giving sub-folders under the global output 
-    globalOutput = defaultOutputDir()
-    path = ensurePathExists(globalOutput,thisPath)
+    path = globalIO.getOutputDir(thisPath)
     for i,mat in enumerate(matricesToSave):
         fName = path + labels[i]
         np.save(fName,mat)

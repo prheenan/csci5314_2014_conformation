@@ -62,14 +62,12 @@ searchPattern = re.compile(
     """,re.VERBOSE)
 
 def GetListOfObjectData(f):
-    mSource = "Step1::GetListOfObjectData"
     fileStr = "file [" + f + "]"
-    util.ReportMessage("Reading: " + fileStr,mSource)
+    util.ReportMessage("Reading: " + fileStr +  " in GetListOfObjectData")
     fileHandle = open(f)
     # read in the file and remove all whitespace by splitting and joining
     # by spaces
     fileBuffer = ''.join(fileHandle.read().split())
-    util.ReportMessage("Matching: " + fileStr,mSource)
     groups=searchPattern.findall(fileBuffer)
     numMatches = len(groups)    
     if (groups):
@@ -104,7 +102,7 @@ def GetListOfObjectData(f):
     numDataPoints = numMatches
     dataByObjects = []
     util.ReportMessage("Processing: [" + str(numObjects) 
-                       + "] points for [" + str(numMatches) + "]",mSource)
+                       + "] points for [" + str(numMatches) + "]")
     for objNum in range(numObjects):
         thisObj = []
         for dataType in range(numDataPoints):
@@ -112,7 +110,7 @@ def GetListOfObjectData(f):
             thisObj.append(toAppend)
         dataByObjects.append(thisObj)
     util.ReportMessage("Processed: [" + str(numObjects) 
-                       + "] points for [" + str(numMatches) + "]",mSource)
+                       + "] points for [" + str(numMatches) + "]")
     return dataByObjects, dataByGroups
 
 def getVelocity(xArr,deltaTimeArr):    
@@ -127,8 +125,8 @@ def sqDeltaSum(vals):
 
 def ProcessData(dataByObject,frameRate):
     # frameRate is in second
-    mSource = "Step1::ProcessData"
     # frames appearing is the first data point
+    util.ReportMessage("ProcessData")
     timeIndex = 0
     meanIndex = 0
     times = [ np.multiply(obj[timeIndex][meanIndex],frameRate)
@@ -160,11 +158,11 @@ def ProcessData(dataByObject,frameRate):
     toCompare = [channel1Flatten,channel2Flatten]
     plotUtil.compareHist('Intensity (au)','Protein Count','FRET Intensities'
                          ,maxXAxis,toCompare,
-                         ['Donor Channel','Acceptor Channel'],mSource)
+                         ['Donor Channel','Acceptor Channel'])
     return velX,velY,times,numTimes,fretRatio,MSD
 
 def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
-    mSource = "Step1::AnalyzeTraces"
+    util.ReportMessage("AnalyzeTraces")
     proteinYStr = '# Proteins'
     numProteins = len(numTimes)
     numBins = max(numTimes)
@@ -173,7 +171,7 @@ def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
     ax = fig.add_subplot(1,1,1)
     plotUtil.histogramPlot(ax,'Frame duration of protein',proteinYStr,
                            titleStr,numTimes,numBins)
-    plotUtil.saveFigure(mSource,"Protein_Distribution",fig)
+    plotUtil.saveFigure(fig,"Protein_Distribution")
 
     fig = plotUtil.pFigure()
     # save the MSD and R^2 of the MSD
@@ -233,11 +231,12 @@ def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
     plotUtil.histogramPlot(ax,'R Squared Coeff',proteinYStr,
                             'Histogram of Protein RSq',RSqVals,numBinsRsq)
     plotCount += 1
-    # next, we plot a comparison of the 'raw', 'valid' (D with uncertainty), and 'processed'
-    # (D fit with RSQ > 0.8)
+    # next, we plot a comparison of the 'raw', 'valid' (D with uncertainty),
+    # and 'processed'
+    # (D fit with RSQ > cutoffRsq)
     cutoffRsq = 0.8
     plt.tight_layout()
-    plotUtil.saveFigure(mSource,"MSD",fig)
+    plotUtil.saveFigure(fig,"MSD")
     
     titleStr = proteinYStr
     xStr = 'Frames Appearing'
@@ -248,7 +247,7 @@ def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
                         ("RSQ > {:.3f}".format(cutoffRsq))]
     comparisonIndices = [goodIndices,bestIndices]
     plotUtil.comparisonPlot(xStr,proteinYStr,titleStr,xLimit,numTimes,
-                            comparisonIndices,compLabel,mSource)
+                            comparisonIndices,compLabel)
     # XXX TODO: compare other options (e.g. x velocity, y velcocity, etc)
     # XXX TODO: try for all files, need a better way to store
     # return all the diffusion coeffs, as well as the 'best' indices we found
@@ -257,7 +256,7 @@ def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
 def GetTracesMain(fileNameList,frameRate=0.1):
     for f in fileNameList:
         if (not os.path.isfile(f)):
-            util.ReportError(True,("Could not find file [" +f +"]"),mSource)
+            util.ReportError(True,("Could not find file [" +f +"]"))
         else:
         # POST: tmpFile is a valid filename
             dataByObjects, dataByGroups = GetListOfObjectData(f)
@@ -269,7 +268,8 @@ def GetTracesMain(fileNameList,frameRate=0.1):
             # XXX only works one at a time for now
             atGoodIndices =\
             util.saveAllAtIndices([times,numTimes,fretRatio,MSD,diffCoeffs],
-                                  ['Per_Protein_Frames_Appearing','Per_Protein_Num_Frames',
+                                  ['Per_Protein_Frames_Appearing',
+                                   'Per_Protein_Num_Frames',
                                    'Per_Protein_Fret_Ratio','MSD_Per_Protein',
                                    'Per_Protein_Diff_Coeff'],
                                   ['Post_Stage1_Analysis'],bestIndices)
