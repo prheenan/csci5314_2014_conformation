@@ -9,6 +9,7 @@ from scipy import stats
 
 IO_Stage1Folder = 'Post_Stage1_Analysis/'
 IO_Stage2Folder = 'Post_Stage2_Analysis/'
+IO_Stage3Folder = 'Post_Stage3_Analysis/'
 
 # define some file names used at each step for saving 'artifacts'.
 # This immensely speeds up runtimes for later stages.
@@ -22,6 +23,12 @@ IO_diff = 'Per_Protein_Diff_Coeff'
 # any of the stage 1 files with these indices, you will get all the 
 # 'well behaved' proteins
 IO_indices = 'GetPhysics_Protein_indices'
+# use for CRTD and RTD plots
+IO_time_CRTD = "GetModel_Time_For_CRTD"
+IO_time_RTD = "GetModel_Time_For_RTD"
+IO_CRTD = "GetModel_CRTD"
+IO_RTD = "GetModel_RTD"
+
 
 class outputHelper:
     globalOutput = "../output"
@@ -113,7 +120,7 @@ def humanReadableSave(listToSave,fileName,header):
             writeObj.writerows([listToSave])
                             
 
-def saveAll(matricesToSave,labels,thisPath):
+def saveAll(matricesToSave,labels,thisPath,saveCSVForHumans=True):
     # matricesToSave: a list of N matrices to save
     # labels: a list of labels to put in the headers of the matrices
     # global output: a single, global output folder
@@ -123,7 +130,9 @@ def saveAll(matricesToSave,labels,thisPath):
         fName = path + labels[i]
         ReportMessage("Saving " + labels[i])
         np.save(fName,mat)
-        humanReadableSave(mat,fName,labels[i])
+        # only save CSV is they want it
+        if (saveCSVForHumans):
+            humanReadableSave(mat,fName,labels[i])
         # XXX: probably want somethng like this 
         # http://stackoverflow.com/questions/14037540/writing-a-python-list-of-lists-to-a-csv-file
 

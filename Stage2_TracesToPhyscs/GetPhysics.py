@@ -152,9 +152,9 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     
     # now get the folded and unfolded dynamics
     foldedArr = getMinimumTime(distances,times,
-                               folded+1*avgDistChangeAbs/3,True)
+                               folded,True)
     unfoldedArr = getMinimumTime(distances,times,
-                                 folded+2*avgDistChangeAbs/3,False)
+                                 folded+avgDistChangeAbs/4,False)
 
     diffTime, definedUnfoldingIdx = getDifferentialTime(foldedArr,unfoldedArr)
     # create our new diffusion coefficients by first taking the ones with

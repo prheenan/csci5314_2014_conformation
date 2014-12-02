@@ -24,21 +24,28 @@ def GetModelMain(residenceTimes,diffCoeffs,frameRate = 0.1):
     goodIndices = np.where(hist > 0)[0]
     hist = hist[goodIndices]
     bins = bins[goodIndices]
-    # get the proportion unfolded
-    proportionUnfoldedCummu = np.divide(countUnfoldedCummu,numProteins)
+    # get the proportion unfolded, cummulatively (cummu residence time dist)
+    CRTD = np.divide(countUnfoldedCummu,numProteins)
+    RTD = hist/numProteins
+
+    # POST: we have all the final data we need. Go ahead and save.
+    util.saveAll([timeGrid,bins,CRTD,RTD],
+                 [util.IO_time_CRTD,util.IO_time_RTD,util.IO_CRTD,util.IO_RTD],
+                 [util.IO_Stage3Folder])
+
     # all that remains is plotting.
     fig = plotUtil.pFigure()
     numPlots = 2
     pltCounter = 1
-    # plot the residence time distribution
+    # plot the residence time distribution (RTD)
     fig.add_subplot(numPlots,1,pltCounter)
-    plt.semilogy(bins,hist/numProteins,'ro-')
+    plt.semilogy(bins,RTD,'ro-')
     plt.ylabel('Probability to fold during time window t')
     plt.title('Residence Time Distribution: P(t) vs t')
     pltCounter += 1
     #plot the cummulative res time dist (CRTD)
     fig.add_subplot(numPlots,1,pltCounter)
-    plt.semilogy(timeGrid,proportionUnfoldedCummu,'ro-')
+    plt.semilogy(timeGrid,CRTD,'ro-')
     plt.xlabel('Time (s)')
     plt.ylabel('Probability to fold after time t')
     plt.title('Cummulative Residence Time Distribution: P(tau>t) vs t')
