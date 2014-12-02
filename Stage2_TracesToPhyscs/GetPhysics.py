@@ -50,6 +50,7 @@ def getMinimumTime(values,times,value,lessThanBool=False):
 
 def getDifferentialTime(valuesBefore,valuesAfter):
     # returns when we have a well-defined unfolding...
+    # also returns the indices of the proteins which were used.
     numVals = len(valuesBefore)
     indices=  []
     diffTime = []
@@ -95,7 +96,8 @@ def getDistances(goodFRET,goodTimes):
         times.append(np.array(betterTime))
         nodeIndices.append(count)
         count += 1
-    return np.array(distances),np.array(times),np.array(indices),np.array(nodeIndices)
+    return np.array(distances),np.array(times),\
+        np.array(indices),np.array(nodeIndices)
 
 
 def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
@@ -121,8 +123,8 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     # http://en.wikipedia.org/wiki/K-means_clustering
     numIters = int(1e3)
     clusters,ignore = cluster.kmeans(flattenDistances,numClusters,iter=numIters)
-    # the clusters give us the 'folded' and 'unfolded' groups. between those, we have
-    # a fairly undefined state.
+    # the clusters give us the 'folded' and 'unfolded' groups. 
+    #between those, we have a fairly undefined state.
     folded = min(clusters)
     unfolded = max(clusters)
     clusters = [unfolded,folded]
@@ -130,10 +132,17 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     folded = getMinimumTime(distances,times,folded,False)
     unfolded = getMinimumTime(distances,times,unfolded,True)
     diffTime, definedUnfoldingIdx = getDifferentialTime(folded,unfolded)
+    # create our new diffusion coefficients by first taking the ones with
+    # well-defined FRET, then taking the ones with well-defined folding.
+    goodIndices = nodeIdx[definedUnfoldingIdx]
+    indexArr = [nodeIdx,definedUnfoldingIdx]
+    goodDiff = util.takeSubset(goodDiff,indexArr)
+    goodTime = util.takeSubset(times,indexArr)
 
-    goodDiff = util.takeSubset(goodDiff,
-                                [nodeIdx,definedUnfoldingIdx])
-
+    # POST: we have all the final data we need. Go ahead and save.
+    util.saveAll([goodIndices,goodDiff,diffTime],
+                 [util.IO_indices,util.IO_diff,util.IO_frames],
+                 [util.IO_Stage2Folder])
     plt.xscale('log', nonposy='clip')
     plt.xlabel('Time since protein (seconds)')
     plt.ylabel('FRET d distance (arb)')
@@ -157,8 +166,8 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
                            len(diffTime)/100,True,True)
 
 
-    plotUtil.saveFigure(fig,'tmp2')
+    plotUtil.saveFigure(fig,'FRET_and_ResidenceTimeHistograms')
     # return the good unfolding times and differential coefficients
-    return diffTime,goodDiff
+    return diffTime,goodDiff,goodIndices
 
     

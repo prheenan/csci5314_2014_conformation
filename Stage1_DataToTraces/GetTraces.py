@@ -253,25 +253,27 @@ def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
     # return all the diffusion coeffs, as well as the 'best' indices we found
     return msdMatrix[:,0],bestIndices
     
-def GetTracesMain(fileNameList,frameRate=0.1):
-    for f in fileNameList:
-        if (not os.path.isfile(f)):
-            util.ReportError(True,("Could not find file [" +f +"]"))
-        else:
+def GetTracesMain(fileName,frameRate=0.1):
+    f = fileName
+    if (not os.path.isfile(f)):
+        util.ReportError(True,("Could not find file [" +f +"]"))
+    else:
         # POST: tmpFile is a valid filename
-            dataByObjects, dataByGroups = GetListOfObjectData(f)
-            velX,velY,times,numTimes,fretRatio,MSD = ProcessData(dataByObjects,frameRate)
-            diffCoeffs,bestIndices = \
-                                     AnalyzeTraces(velX,velY,times,numTimes,
-                                                   fretRatio,MSD,frameRate)
+        dataByObjects, dataByGroups = GetListOfObjectData(f)
+        velX,velY,times,numTimes,fretRatio,MSD = \
+                                        ProcessData(dataByObjects,frameRate)
+        diffCoeffs,bestIndices = \
+                                 AnalyzeTraces(velX,velY,times,numTimes,
+                                               fretRatio,MSD,frameRate)
             
-            # XXX only works one at a time for now
-            atGoodIndices =\
-            util.saveAllAtIndices([times,numTimes,fretRatio,MSD,diffCoeffs],
-                                  ['Per_Protein_Frames_Appearing',
-                                   'Per_Protein_Num_Frames',
-                                   'Per_Protein_Fret_Ratio','MSD_Per_Protein',
-                                   'Per_Protein_Diff_Coeff'],
-                                  ['Post_Stage1_Analysis'],bestIndices)
-            goodTimes , ignore, goodFRET , ignore,goodDiff = atGoodIndices
-            return goodTimes,goodFRET,goodDiff
+        # XXX only works one at a time for now
+        atGoodIndices =\
+                util.saveAllAtIndices([times,numTimes,fretRatio,MSD,diffCoeffs],
+                        [util.IO_frames,
+                         util.IO_numFrames,
+                         util.IO_fret,
+                         util.IO_msd,
+                         util.IO_diff],
+                        [util.IO_Stage1Folder],bestIndices)
+        goodTimes , ignore, goodFRET , ignore,goodDiff = atGoodIndices
+        return goodTimes,goodFRET,goodDiff

@@ -6,6 +6,22 @@ import numpy as np
 import csv
 
 
+IO_Stage1Folder = 'Post_Stage1_Analysis/'
+IO_Stage2Folder = 'Post_Stage2_Analysis/'
+
+# define some file names used at each step for saving 'artifacts'.
+# This immensely speeds up runtimes for later stages.
+IO_frames = 'Per_Protein_Frames_Appearing'
+IO_numFrames =  'Per_Protein_Num_Frames'
+IO_fret = 'Per_Protein_Fret_Ratio'
+IO_msd = 'MSD_Per_Protein'
+IO_diff = 'Per_Protein_Diff_Coeff'
+# 'indices' is used by getPhysics to index into the proteins which were used
+# to generate all the subsequent data. In other words, if you index into
+# any of the stage 1 files with these indices, you will get all the 
+# 'well behaved' proteins
+IO_indices = 'GetPhysics_Protein_indices'
+
 class outputHelper:
     globalOutput = "../output"
     def __init__(self):
@@ -30,14 +46,13 @@ class outputHelper:
 
 globalIO = outputHelper()
 
-def loadAll(folder,files):
+def loadAll(folder,files,ext='.npy'):
     arr = []
     # loop through all the desired files and load them if we need them.
     for f in files:
-        path = folder + f
+        path = folder + f + ext
         if (not os.path.isfile(path)):
-            Utilities.ReportError(True,"In Utilities::loadAll, couldn't find " +
-                                  path)
+            ReportError(True,"In Utilities::loadAll, couldn't find " + path)
         # POST: path is to a valid filename
         arr.append(np.load(path))
     return arr
@@ -93,9 +108,9 @@ def humanReadableSave(listToSave,fileName,header):
         try:
             writeObj.writerows(listToSave)
         except csv.Error as e:
-            ReportMessage(str(e) + ",probably just writing a single-element list. no worries."
-                    ,"Utility::humanReadableSave")
-            writeObj.writerow(listToSave)
+            # must not be a list
+            writeObj.writerows([listToSave])
+                            
 
 def saveAll(matricesToSave,labels,thisPath):
     # matricesToSave: a list of N matrices to save
@@ -105,6 +120,7 @@ def saveAll(matricesToSave,labels,thisPath):
     path = globalIO.getOutputDir(thisPath)
     for i,mat in enumerate(matricesToSave):
         fName = path + labels[i]
+        ReportMessage("Saving " + labels[i])
         np.save(fName,mat)
         humanReadableSave(mat,fName,labels[i])
         # XXX: probably want somethng like this 
