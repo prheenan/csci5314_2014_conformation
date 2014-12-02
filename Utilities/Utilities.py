@@ -4,6 +4,7 @@ import os
 import numpy as np
 # Use CSV for writing human readable files
 import csv
+from scipy import stats
 
 
 class outputHelper:
@@ -118,7 +119,11 @@ def saveAllAtIndices(matricesToSave,labels,thisPath,indices):
     saveAll(endMatrices,labels,thisPath)
     return endMatrices
 
+def rsquared(x, y):
+    """ Return R^2 where x and y are array-like."""
 
+    slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+    return r_value**2
 
 
 
