@@ -12,12 +12,14 @@ from itertools import cycle
 import matplotlib.pyplot as plt
 
 def GetModelMain(residenceTimes,diffCoeffs,frameRate = 0.1):
+    print(residenceTimes)
     sortedTimes = np.sort(residenceTimes)
+    print(sortedTimes)
     numProteins = len(residenceTimes)
     diffTimes = np.gradient(np.unique(sortedTimes))
     # get the minimum step we care about, limited by our frame rate
     minTimeStep = max(min(diffTimes),frameRate)
-    timeGrid = np.arange(0,max(sortedTimes),minTimeStep)
+    timeGrid = np.arange(0,np.max(sortedTimes),minTimeStep)
     # count the number unfolded
     countUnfoldedCummu = [sum(sortedTimes > t) for t in timeGrid]
     hist,bins = np.histogram(sortedTimes, bins=timeGrid)

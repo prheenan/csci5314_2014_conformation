@@ -39,6 +39,7 @@ def histogramPlot(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
     # wrapper function, ignore the bins which we don't care about.
     ax,ignore,ignore = histogramPlotFull(ax,xlabelStr,ylabelStr,titleStr,
                                          data,numBins,secondX,Normalize)
+    return ax
 
 def histogramPlotFull(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
                   secondX = False,Normalize=False):
