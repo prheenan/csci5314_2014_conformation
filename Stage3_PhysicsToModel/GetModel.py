@@ -16,7 +16,7 @@ def GetModelMain(residenceTimes,diffCoeffs,frameRate = 0.1):
     numProteins = len(residenceTimes)
     diffTimes = np.gradient(np.unique(sortedTimes))
     # get the minimum step we care about, limited by our frame rate
-    minTimeStep = max(min(diffTimes),frameRate/2)
+    minTimeStep = max(min(diffTimes),frameRate)
     timeGrid = np.arange(0,max(sortedTimes),minTimeStep)
     # count the number unfolded
     countUnfoldedCummu = [sum(sortedTimes > t) for t in timeGrid]
@@ -34,7 +34,7 @@ def GetModelMain(residenceTimes,diffCoeffs,frameRate = 0.1):
     fig.add_subplot(numPlots,1,pltCounter)
     plt.semilogy(bins,hist/numProteins,'ro-')
     plt.ylabel('Probability to fold during time window t')
-    plt.title('Residence Time Distribution: P(t) vs t)')
+    plt.title('Residence Time Distribution: P(t) vs t')
     pltCounter += 1
     #plot the cummulative res time dist (CRTD)
     fig.add_subplot(numPlots,1,pltCounter)

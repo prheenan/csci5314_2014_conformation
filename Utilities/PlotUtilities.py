@@ -12,6 +12,10 @@ def normalizedBins(array):
     # return the 'normalized' bins or bins numbers for histogramming
     return 100
 
+def denormalize(absArr,toDenorm):
+    ignore,minV,maxV = histNormalize(absArr)
+    return (toDenorm/normalizedBins(absArr)*(maxV-minV)) + minV
+
 def normalizeTo(normalArr,toNorm):
     # normalize toNorm to the array 'normalArr', according to histNormalize.
     # good for plotting!
@@ -30,11 +34,15 @@ def histNormalize(histIn,minV=-1,maxV=-1):
     normalizedHist = normalizedBins(histIn) *(histIn - minV)/(maxV-minV)
     return normalizedHist,minV,maxV
 
-
 def histogramPlot(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
                   secondX = False,Normalize=False):
-    numPoints = len(data)
+    # wrapper function, ignore the bins which we don't care about.
+    ax,ignore,ignore = histogramPlotFull(ax,xlabelStr,ylabelStr,titleStr,
+                                         data,numBins,secondX,Normalize)
 
+def histogramPlotFull(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
+                  secondX = False,Normalize=False):
+    numPoints = len(data)
     t = plt.title(titleStr +  getNStr(numPoints))
     if (Normalize):
         # if we are normalizing, the absolute number is the max of the data...
@@ -46,9 +54,11 @@ def histogramPlot(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
     # POST: data and absolute scaling number are set
     if (secondX):
         t.set_y(1.4)
-        secondAxis(ax,'Absolute' + xlabelStr,[0,absoluteNum],False)
+        xlim = [0,absoluteNum]
+        secondAxis(ax,'Absolute' + xlabelStr,xlim,False)
     n, bins, patches =ax.hist( data, numBins, normed=True,stacked=True,
                                 facecolor='green', alpha=0.75)
+
     ax.set_xlabel(xlabelStr)
     ax.set_ylabel('Norm ' + ylabelStr)
     ax.set_yscale('log', nonposy='clip')
@@ -60,7 +70,8 @@ def histogramPlot(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
     # create a twin axis for the absolute count 
     yLimAbs = np.multiply(yLimNorm,numPoints)
     secondAxis(ax,"Abs " + ylabelStr ,yLimAbs)
-    return ax
+    # return the *absolute* number in the bins
+    return ax,n,bins
 
 
 def secondAxis(ax,label,limits,secondY =True):

@@ -34,6 +34,9 @@ trials = ["5x_PBS_25C_","AP2_minus6_AHAPS","AP2_minus6_pbs","AP2minus4_FS",
 # file names for stage 1, defined in the common utility class.
 fileNamesStage1 = [Utilities.IO_frames,Utilities.IO_diff,Utilities.IO_fret]
 fileNamesStage2 = [Utilities.IO_frames,Utilities.IO_diff,Utilities.IO_indices]
+# can 'force' a re-calulation of the data
+forceStage1 = False
+forceStage2 = True
 
 # loop through each trial separately, averaging the independent
 # runs
@@ -59,7 +62,7 @@ for t in trials:
     stage2Folder = outputDir + Utilities.IO_Stage2Folder
     # Next, start stage 1 if we need it; otherwise just pull in the needed 
     # variables.
-    if (not Utilities.dirExists(stage1Folder)):
+    if (not Utilities.dirExists(stage1Folder) or forceStage1):
         # get the X,Y velocity, times, and ratio on a per protein basis
         # each of these is a list. Each element in a list corresponds to data
         # for a single protein
@@ -76,7 +79,7 @@ for t in trials:
     # POST: now have valid, trackable diffusion, times, and FRET
     # Move to stage 2. where we get the unfolding times
     Utilities.globalIO.setStep("Step2::GetPhysics")
-    if (not Utilities.dirExists(stage2Folder)):
+    if (not Utilities.dirExists(stage2Folder) or forceStage2):
         unfoldingTimes, diffusionCoeffs,trackedIndices = \
                     GetPhysics.GetPhysicsMain(trackedTimes
                                               ,trackedFRET,trackedDiffusion)

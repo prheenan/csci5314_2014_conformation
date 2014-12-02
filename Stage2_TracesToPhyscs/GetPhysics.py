@@ -29,8 +29,8 @@ def getMinimumTime(values,times,value,lessThanBool=False):
         listTmp = np.interp(timeGrid,timeRaw,listV)
         # need to make sure we start below the lower bound
         # or send above the upper bound
-        lessThan =(listTmp <= value)
-        greaterThan = (listTmp >= value)        
+        lessThan =(listTmp < value)
+        greaterThan = (listTmp > value)        
         if (lessThanBool):
             toTest = lessThan
         else:
@@ -114,7 +114,9 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     # get just the 'nodes' with valid valued.
     # flatten the distances to get a notion of the 'all time'
     # distance information. We can use this and kmeans to find a 'folded
-    # and unfolded sttae
+    # and unfolded state
+    
+    distMaxDiff = [np.max(d) - np.min(d) for d in distances]
     flattenDistances = np.concatenate(distances)
     # use two clusters; folded and unfolded
     numClusters = 2
@@ -128,10 +130,33 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     folded = min(clusters)
     unfolded = max(clusters)
     clusters = [unfolded,folded]
+    # go ahead and start plotting so we can use the histograms to 
+    # get the average change. this will be used insted of a cluster 
+    fig = plotUtil.pFigure()
+    numPlots = 3
+    plotCount = 1
+    fretLabel = 'FRET d Distance (arb)'
+    # plot the distribution of maximum FRET distances
+    ax = plt.subplot(numPlots,1,plotCount)
+    xlims = [np.min(flattenDistances),np.max(flattenDistances)]
+    ax,N,bins = plotUtil.histogramPlotFull(ax,fretLabel,'# Proteins',
+                           'Maximum FRET change',distMaxDiff,
+                                len(flattenDistances)/100,True,True)
+    # N here is the normalized number in each bin, so this gives
+    # the normaized average (good for plotting)
+    avgDistChangeNorm = np.sum(bins[:-1] * N)
+    # in order to actually cluster our data, we need a real, absolute number
+    # for the average. de-normalize it.
+    avgDistChangeAbs  = plotUtil.denormalize(distMaxDiff,avgDistChangeNorm)
+    plt.axvline(avgDistChangeNorm,color='r')
     
-    folded = getMinimumTime(distances,times,folded,False)
-    unfolded = getMinimumTime(distances,times,unfolded,True)
-    diffTime, definedUnfoldingIdx = getDifferentialTime(folded,unfolded)
+    # now get the folded and unfolded dynamics
+    foldedArr = getMinimumTime(distances,times,
+                               folded+1*avgDistChangeAbs/3,True)
+    unfoldedArr = getMinimumTime(distances,times,
+                                 folded+2*avgDistChangeAbs/3,False)
+
+    diffTime, definedUnfoldingIdx = getDifferentialTime(foldedArr,unfoldedArr)
     # create our new diffusion coefficients by first taking the ones with
     # well-defined FRET, then taking the ones with well-defined folding.
     goodIndices = nodeIdx[definedUnfoldingIdx]
@@ -143,23 +168,27 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     util.saveAll([goodIndices,goodDiff,diffTime],
                  [util.IO_indices,util.IO_diff,util.IO_frames],
                  [util.IO_Stage2Folder])
-    plt.xscale('log', nonposy='clip')
-    plt.xlabel('Time since protein (seconds)')
-    plt.ylabel('FRET d distance (arb)')
-    fig = plotUtil.pFigure()
-    numPlots = 2
-    plotCount = 1
-    fretLabel = 'FRET d Distance (arb)'
+
+    plotCount +=1
+    # plot the FRET distances
     ax = plt.subplot(numPlots,1,plotCount)
     plotUtil.histogramPlot(ax,fretLabel,'# Proteins',
                            'FRET Distance histogram',flattenDistances,
                            len(flattenDistances)/100,True,True)
     # plot guiding lines for the two clusters we found
     normalClusters = plotUtil.normalizeTo(flattenDistances,clusters)
-    plt.axvline(normalClusters[0])
-    plt.axvline(normalClusters[1])
-    
+    interNorm = plotUtil.normalizeTo(flattenDistances,avgDistChangeAbs+folded)
+    foldedNorm = normalClusters[1]
+    unfoldedNorm = normalClusters[0]
+    alphaVal = 0.25
+    plt.axvspan(0, foldedNorm, color='red', alpha=alphaVal)
+    plt.axvspan(foldedNorm, interNorm, color='blue', alpha=alphaVal)
+    plt.axvspan(interNorm,100,color='green',alpha=alphaVal)
+    plt.axvline(foldedNorm,color='c') # show 
+    plt.axvline(unfoldedNorm,color='m') # show the second color as blue
     plotCount += 1
+
+    # plot something like the residence time
     ax = plt.subplot(numPlots,1,plotCount)
     plotUtil.histogramPlot(ax,'Unfolding time distribution','# Proteins',
                            'Unfolding time (seconds) ',diffTime,
