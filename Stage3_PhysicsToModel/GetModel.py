@@ -12,9 +12,9 @@ from itertools import cycle
 import matplotlib.pyplot as plt
 
 def GetModelMain(residenceTimes,diffCoeffs,frameRate = 0.1):
-    print(residenceTimes)
+    # XXX need to add in averaging and standard deviations for the many
+    # separate trials of residence times, binning by frame rate
     sortedTimes = np.sort(residenceTimes)
-    print(sortedTimes)
     numProteins = len(residenceTimes)
     diffTimes = np.gradient(np.unique(sortedTimes))
     # get the minimum step we care about, limited by our frame rate
@@ -40,17 +40,18 @@ def GetModelMain(residenceTimes,diffCoeffs,frameRate = 0.1):
     numPlots = 2
     pltCounter = 1
     # plot the residence time distribution (RTD)
+    nStr = plotUtil.getNStr(numProteins)
     fig.add_subplot(numPlots,1,pltCounter)
     plt.semilogy(bins,RTD,'ro-')
     plt.ylabel('Probability to fold during time window t')
-    plt.title('Residence Time Distribution: P(t) vs t')
+    plt.title('Residence Time Distribution: P(t) vs t for' + nStr)
     pltCounter += 1
     #plot the cummulative res time dist (CRTD)
     fig.add_subplot(numPlots,1,pltCounter)
     plt.semilogy(timeGrid,CRTD,'ro-')
     plt.xlabel('Time (s)')
     plt.ylabel('Probability to fold after time t')
-    plt.title('Cummulative Residence Time Distribution: P(tau>t) vs t')
+    plt.title('Cummulative Residence Time Distribution: P(tau>t) vs t for' + nStr)
     pltCounter += 1
 
     # save the figure

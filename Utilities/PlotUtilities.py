@@ -50,7 +50,6 @@ def histogramPlotFull(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
     if (Normalize):
         # if we are normalizing, the absolute number is the max of the data...
         absoluteNum = np.max(data)
-        print(data)
         data,ignoreMin,ignoreMax = histNormalize(data)
         numBins = normalizedBins(data)
     else:

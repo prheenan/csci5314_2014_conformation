@@ -60,9 +60,13 @@ for t in trials:
         outputDir = Utilities.globalIO.getOutputDir([],"")
         stage1Folder = outputDir + Utilities.IO_Stage1Folder
         stage2Folder = outputDir + Utilities.IO_Stage2Folder
+        extFile = ".npy"
+        cacheFileS1 = stage1Folder + fileNamesStage1[0] + extFile
+        cacheFileS2 = stage2Folder + fileNamesStage2[0] + extFile
         # Next, start stage 1 if we need it; otherwise just pull in the needed 
         # variables.
-        if (not Utilities.dirExists(stage1Folder) or forceStage1):
+        if (not Utilities.dirExists(cacheFileS1)
+            or forceStage1):
             # get the X,Y velocity, times, and ratio on a per protein basis
             # each of these is a list. Each element in a list corresponds to data
             # for a single protein
@@ -72,19 +76,20 @@ for t in trials:
         else:
         # the output directory exists; no sense in re-running the analysis.
         # just use the text output.
-            Utilities.ReportMessage("Skipping Stage1 since [" + stage1Folder + 
+            Utilities.ReportMessage("Skipping Stage1 since [" + cacheFileS1 + 
                                     "] already exists")
             trackedTimes, trackedDiffusion,trackedFRET = \
                                     Utilities.loadAll(stage1Folder,fileNamesStage1)
         # POST: now have valid, trackable diffusion, times, and FRET
         # Move to stage 2. where we get the unfolding times
         Utilities.globalIO.setStep("Step2::GetPhysics")
-        if (not Utilities.dirExists(stage2Folder) or forceStage2):
+        if (not Utilities.dirExists(cacheFileS2)
+            or forceStage2):
             unfoldingTimes, diffusionCoeffs,trackedIndices = \
                             GetPhysics.GetPhysicsMain(trackedTimes
                                                       ,trackedFRET,trackedDiffusion)
         else:
-            Utilities.ReportMessage("Skipping Stage2 since [" + stage2Folder + 
+            Utilities.ReportMessage("Skipping Stage2 since [" + cacheFileS2 + 
                                     "] already exists")
             unfoldingTimes, diffusionCoeffs,trackedIndices = \
                         Utilities.loadAll(stage2Folder,fileNamesStage2)
@@ -97,5 +102,8 @@ for t in trials:
         # same the unfolding time and diffusion coefficients across all the trial
     # Move to Stage 3, where we get the residence time distribution
     Utilities.globalIO.setStep("Step3::GetModel")
-    GetModel.GetModelMain(np.ravel(trialTimes),np.ravel(trialDiff))
+    # no longer in any particular file, so save everything in the 'top level'
+    Utilities.globalIO.setFile("")
+
+    GetModel.GetModelMain(np.concatenate(trialTimes),np.concatenate(trialDiff))
     exit(1)
