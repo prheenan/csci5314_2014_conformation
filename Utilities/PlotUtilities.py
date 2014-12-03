@@ -30,6 +30,8 @@ def histNormalize(histIn,minV=-1,maxV=-1):
         minV = np.min(histIn)
     if (maxV < 0):
         maxV = np.max(histIn)
+    if (minV == maxV):
+        ReportError(True,"histNormalize,Div/0")
     # normalize the histogram and center between 0 and 1 for normal plotting
     normalizedHist = normalizedBins(histIn) *(histIn - minV)/(maxV-minV)
     return normalizedHist,minV,maxV
@@ -48,6 +50,7 @@ def histogramPlotFull(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
     if (Normalize):
         # if we are normalizing, the absolute number is the max of the data...
         absoluteNum = np.max(data)
+        print(data)
         data,ignoreMin,ignoreMax = histNormalize(data)
         numBins = normalizedBins(data)
     else:
@@ -57,7 +60,7 @@ def histogramPlotFull(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
         t.set_y(1.4)
         xlim = [0,absoluteNum]
         secondAxis(ax,'Absolute' + xlabelStr,xlim,False)
-    n, bins, patches =ax.hist( data, numBins, normed=True,stacked=True,
+    n, bins, patches =ax.hist( data, numBins,normed=True,stacked=True,
                                 facecolor='green', alpha=0.75)
 
     ax.set_xlabel(xlabelStr)

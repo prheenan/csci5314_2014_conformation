@@ -12,6 +12,8 @@ from itertools import cycle
 import matplotlib.pyplot as plt
 import scipy.cluster.vq as cluster 
 from scipy import interpolate
+# use math for isnan and such
+import math
 
 def convertTimeToIndex(times,frameRate=0.1):
     return np.round(times / frameRate)
@@ -80,9 +82,10 @@ def getDistances(goodFRET,goodTimes):
     for t,FRET in zip(goodTimes,goodFRET):
         # this is the trace, FRET, and diff for each protein
         # force some reason we have negative data? (Figure this out)
-        # XXX make the ugly where thing into a find.
-        # XXX figure out how to fix this..
-        goodIndices = np.where(FRET > 0)[0]
+        # only look at where fret is finite and ge 0.
+        goodIndices = np.where( (FRET >= 0) 
+                                &
+                                np.isfinite(FRET))[0]
         if ((len(goodIndices) == 0) or 
             (min(goodIndices) == max(goodIndices))):
             indices.append([])

@@ -35,8 +35,8 @@ trials = ["5x_PBS_25C_","AP2_minus6_AHAPS","AP2_minus6_pbs","AP2minus4_FS",
 fileNamesStage1 = [Utilities.IO_frames,Utilities.IO_diff,Utilities.IO_fret]
 fileNamesStage2 = [Utilities.IO_frames,Utilities.IO_diff,Utilities.IO_indices]
 # can 'force' a re-calulation of the data
-forceStage1 = True
-forceStage2 = True
+forceStage1 = False
+forceStage2 = False
 
 # loop through each trial separately, averaging the independent
 # runs
@@ -52,8 +52,7 @@ for t in trials:
     trialTimes = []
     trialDiff = []
     for f in trialFiles:
-        filesFound = filesFound[0]
-        fileNameExt = os.path.basename(filesFound)
+        fileNameExt = os.path.basename(f)
         fileName = os.path.splitext(fileNameExt)[0]
         Utilities.globalIO.setTrial(t)
         Utilities.globalIO.setFile(fileName)
@@ -63,12 +62,12 @@ for t in trials:
         stage2Folder = outputDir + Utilities.IO_Stage2Folder
         # Next, start stage 1 if we need it; otherwise just pull in the needed 
         # variables.
-        if (not Utilities.dirExists(stage1Folder + f) or forceStage1):
+        if (not Utilities.dirExists(stage1Folder) or forceStage1):
             # get the X,Y velocity, times, and ratio on a per protein basis
             # each of these is a list. Each element in a list corresponds to data
             # for a single protein
             trackedTimes,trackedFRET,trackedDiffusion = \
-                                    GetTraces.GetTracesMain(filesFound)
+                                    GetTraces.GetTracesMain(f)
             # get the output dir for the previous path. 
         else:
         # the output directory exists; no sense in re-running the analysis.
@@ -92,11 +91,11 @@ for t in trials:
         # XXX fix ths flattening
         unfoldingTimes = np.ravel(unfoldingTimes)
         diffusionCoeffs = np.ravel(diffusionCoeffs)
-        # for now, go ahead and break after just one.
-        break
+        trialTimes.append(unfoldingTimes)
+        trialDiff.append(diffusionCoeffs)
         # POST: valid unfolding time and diffusion coefficients.
         # same the unfolding time and diffusion coefficients across all the trial
     # Move to Stage 3, where we get the residence time distribution
     Utilities.globalIO.setStep("Step3::GetModel")
-    GetModel.GetModelMain(unfoldingTimes,diffusionCoeffs)
+    GetModel.GetModelMain(np.ravel(trialTimes),np.ravel(trialDiff))
     exit(1)
