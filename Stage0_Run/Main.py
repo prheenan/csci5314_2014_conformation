@@ -60,6 +60,7 @@ for t in trials:
         outputDir = Utilities.globalIO.getOutputDir([],"")
         stage1Folder = outputDir + Utilities.IO_Stage1Folder
         stage2Folder = outputDir + Utilities.IO_Stage2Folder
+        # look for 'cached' files, which allow us to save the previous stages, speeding up everything a lot.
         extFile = ".npy"
         cacheFileS1 = stage1Folder + fileNamesStage1[0] + extFile
         cacheFileS2 = stage2Folder + fileNamesStage2[0] + extFile
@@ -94,8 +95,7 @@ for t in trials:
             unfoldingTimes, diffusionCoeffs,trackedIndices = \
                         Utilities.loadAll(stage2Folder,fileNamesStage2)
         # XXX fix ths flattening
-        unfoldingTimes = np.ravel(unfoldingTimes)
-        diffusionCoeffs = np.ravel(diffusionCoeffs)
+
         trialTimes.append(unfoldingTimes)
         trialDiff.append(diffusionCoeffs)
         # POST: valid unfolding time and diffusion coefficients.
@@ -105,5 +105,4 @@ for t in trials:
     # no longer in any particular file, so save everything in the 'top level'
     Utilities.globalIO.setFile("")
 
-    GetModel.GetModelMain(np.concatenate(trialTimes),np.concatenate(trialDiff))
-    exit(1)
+    GetModel.GetModelMain(trialTimes,trialDiff)

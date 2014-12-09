@@ -159,8 +159,19 @@ For our purposes, we can calculate this value given the X and Y coordinates as:
 
 \eqs{  <(\vect{r} - \vect{r}_0)^2>_{avg}\\
  &=  <(x_t - x_0)^2 + (y_t-y_0)^2>_{avg}  \\
-&= \frac{1}{N-1} \sum_{t=1}^{N-1} [\Delta X^2 + \Delta Y^2] = 4Dt }
+&= \frac{1}{N-1} \sum_{t=1}^{N-1} [\Delta X_{0\rightarrow t}^2
+ + \Delta Y_{0 \rightarrow t}^2] = 4Dt }
 
+\section{Diffusion Coefficient Model}
+
+\eqs{ p(t > t_u) = A \sum_{i}^K f_i e^{-\frac{t}{\tau_i} } }
+
+K1:
+
+\eqs{ p(t > t_u) = A f_0 e^{-\frac{t}{\tau_{0}} } }
+\eqs{ p(t > t_u) = A [f_0 e^{-\frac{t}{\tau_{0}}} + f_1 e^{-\frac{t}{\tau_{1}}} ] }
+\eqs{ p(t > t_u) = A  [f_0 e^{-\frac{t}{\tau_{0}}} + f_1 e^{-\frac{t}{\tau_{1}}}
+    + f_2 e^{-\frac{t}{\tau_{2}} } ]}
 
 
 

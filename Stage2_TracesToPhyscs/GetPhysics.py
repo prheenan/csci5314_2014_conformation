@@ -132,7 +132,6 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     #between those, we have a fairly undefined state.
     folded = min(clusters)
     unfolded = max(clusters)
-    clusters = [unfolded,folded]
     # go ahead and start plotting so we can use the histograms to 
     # get the average change. this will be used insted of a cluster 
     fig = plotUtil.pFigure()
@@ -142,22 +141,33 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     # plot the distribution of maximum FRET distances
     ax = plt.subplot(numPlots,1,plotCount)
     xlims = [np.min(flattenDistances),np.max(flattenDistances)]
-    ax,N,bins = plotUtil.histogramPlotFull(ax,fretLabel,'# Proteins',
-                           'Maximum FRET change',distMaxDiff,
-                                len(flattenDistances)/100,True,True)
+
     # N here is the normalized number in each bin, so this gives
     # the normaized average (good for plotting)
-    avgDistChangeNorm = np.sum(bins[:-1] * N)
+    medianDist = np.median(distMaxDiff)
+    meanDist = np.mean(distMaxDiff)
+    bestDistChangeAbs = medianDist/2
+    medianStr = "Half Median Change: {:.2f}".format(bestDistChangeAbs)
     # in order to actually cluster our data, we need a real, absolute number
     # for the average. de-normalize it.
-    avgDistChangeAbs  = plotUtil.denormalize(distMaxDiff,avgDistChangeNorm)
-    plt.axvline(avgDistChangeNorm,color='r')
-    
-    # now get the folded and unfolded dynamics
+    bestDistChangeNorm  = plotUtil.normalizeTo(distMaxDiff,bestDistChangeAbs)
+
+    ax,N,bins = plotUtil.histogramPlotFull(ax,fretLabel,'# Proteins',
+                           'Maximum FRET change, ' + medianStr +',',distMaxDiff,
+                                len(flattenDistances)/100,True,True)
+    plt.axvline(bestDistChangeNorm,color='r',label=medianStr)
+
+    plt.legend()
+
+    belowIsFolded = folded
+    aboveIsUnfolded = folded + bestDistChangeAbs
+
+    # now get the folded and unfolded dynamics, based on the cutoffs from above
+    # the folded times must be less than what we saw below
     foldedArr = getMinimumTime(distances,times,
-                               folded,True)
+                               belowIsFolded,True)
     unfoldedArr = getMinimumTime(distances,times,
-                                 folded+avgDistChangeAbs/4,False)
+                                 aboveIsUnfolded,False)
 
     diffTime, definedUnfoldingIdx = getDifferentialTime(foldedArr,unfoldedArr)
     # create our new diffusion coefficients by first taking the ones with
@@ -175,20 +185,22 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     plotCount +=1
     # plot the FRET distances
     ax = plt.subplot(numPlots,1,plotCount)
-    plotUtil.histogramPlot(ax,fretLabel,'# Proteins',
+    plotUtil.histogramPlot(ax,fretLabel,'# Frames',
                            'FRET Distance histogram',flattenDistances,
                            len(flattenDistances)/100,True,True)
     # plot guiding lines for the two clusters we found
-    normalClusters = plotUtil.normalizeTo(flattenDistances,clusters)
-    interNorm = plotUtil.normalizeTo(flattenDistances,avgDistChangeAbs+folded)
-    foldedNorm = normalClusters[1]
-    unfoldedNorm = normalClusters[0]
+    normalClusters = plotUtil.normalizeTo(flattenDistances,[belowIsFolded,aboveIsUnfolded])
+    foldedNorm = min(normalClusters)
+    unfoldedNorm = max(normalClusters)
+    lowerNorm = [0,foldedNorm, unfoldedNorm]
+    upperNorm = [foldedNorm,unfoldedNorm,100]
+
+    colors = ['r','y','b']
+    labels = ['folded','intermediate','unfolded']
     alphaVal = 0.25
-    plt.axvspan(0, foldedNorm, color='red', alpha=alphaVal)
-    plt.axvspan(foldedNorm, interNorm, color='blue', alpha=alphaVal)
-    plt.axvspan(interNorm,100,color='green',alpha=alphaVal)
-    plt.axvline(foldedNorm,color='c') # show 
-    plt.axvline(unfoldedNorm,color='m') # show the second color as blue
+    for low,up,col,lab in zip(lowerNorm,upperNorm,colors,labels):
+        plt.axvspan(low, up, color=col, alpha=alphaVal,label=lab)
+    plt.legend()
     plotCount += 1
 
     # plot something like the residence time
