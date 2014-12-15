@@ -33,7 +33,7 @@ testDataType=".dat"
 trials = ["5x_PBS_25C_","AP2_minus6_AHAPS","AP2_minus6_pbs","AP2minus4_FS"]
 numTrials = len(trials)
 # mean, stdev, and RSQ for the first tau (for now
-statsLabel = ['Tau0','Tau1','1-RSQ']
+statsLabel = ['Tau0','Tau1','RSQ']
 # each tau value (everything except RSQ) has an uncertainty
 numBars = len(statsLabel)
 numParams = (numBars-1)*2+1
@@ -49,7 +49,7 @@ fileNamesStage3 = [Utilities.IO_model,Utilities.IO_model_stdevs,Utilities.IO_mod
 # can 'force' a re-calulation of the data
 forceStage1 = False
 forceStage2 = False
-forceStage3 = False
+forceStage3 = True
 # the numbers in the modeling file, determining which models we will use..
 modelsToUse = [1,2,3]
 # look for 'cached' files, which allow us to save the previous stages, speeding up everything a lot.
@@ -150,7 +150,7 @@ for tNum,t in enumerate(trials):
                                 "] already exists, plotting comparison.")
     # for each trial, for now just look at a single Model
     modelToCheck = 1
-    fitStdRsq = [params[modelToCheck][-2:],stdev[modelToCheck][-2:],RSQ[modelToCheck]]
+    fitStdRsq = [params[modelToCheck][-(modelToCheck+1):],stdev[modelToCheck][-(modelToCheck+1):],RSQ[modelToCheck]]
     stats = np.concatenate(fitStdRsq)
     trialStats[tNum,:] = stats
 
@@ -161,9 +161,10 @@ f = pltUtil.pFigure()
 tickLabelX = np.arange(0,numBars)
 colorCycler = pltUtil.cycleColors()
 ax = plt.subplot(1,1,1)
-axRSQ = pltUtil.secondAxis(ax,'1-RSQ',[0,0.002])
+axRSQ = pltUtil.secondAxis(ax,'RSQ',[0,1.0])
 wid = 1/(numTrials*numBars)
 plt.title('Comparison of Surface Modeling Parameters')
+barDict = dict(elinewidth=4, ecolor='m')
 for t in range(numTrials):
     # XXX fix this to make it more general...
     RSQ = trialStats[t,-1]
@@ -176,8 +177,8 @@ for t in range(numTrials):
     mColor = next(colorCycler)
     mLabel = trials[t]
     ax.bar(xVals[0:numVals],meanVals,width=wid,yerr=0.2*stdVals,
-           color=mColor,ecolor='m',align='center',label=mLabel)
-    axRSQ.bar(xVals[numVals],1-RSQ,width=wid,color=mColor,align='center',label=mLabel)
+           color=mColor,error_kw = barDict,align='center',label=mLabel)
+    axRSQ.bar(xVals[numVals],RSQ,width=wid,color=mColor,align='center',label=mLabel)
     # only the second time, add a third axis
 #axRSQ.set_yscale('log')
 ax.legend(loc='upper left')

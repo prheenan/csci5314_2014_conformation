@@ -82,13 +82,16 @@ def GetModelMain(residenceTimes,diffCoeffs,modelNums,frameRate = 0.1,plotRTD=Fal
         tauLabels = ['tau0']
         # start off with an initial guess
         tauGuess = [1]
-        freqGuess = [0.5]
+        freqGuess = [1]
+        #modelNumber-1 gives number of taus
+        #modelNumber-1 gives number of taud (but only fit modelNumber-1)
         for i in range(modelNumber-1):
-            freqLabels.append('f' + str(i+1))
-            tauLabels.append('tau'+str(i+1))
+            freqLabels.append('f' + str(i))
+            tauLabels.append('tau'+str(i))
             tauGuess.append(tauGuess[i]/10)
             freqGuess.append(freqGuess[i]/10)
-        modelGuess.extend(freqGuess)
+        if (modelNumber > 1):
+            modelGuess.extend(freqGuess[1:])
         modelGuess.extend(tauGuess)
         modelLabels.extend(freqLabels)
         modelLabels.extend(tauLabels)
@@ -114,7 +117,7 @@ def GetModelMain(residenceTimes,diffCoeffs,modelNums,frameRate = 0.1,plotRTD=Fal
         stdevFvals = stdUnordered[indicesF][sortIndices]
         fitParams = np.array( ((fVals,taus)) ).flatten()
         # second is stdev
-        stdev = np.array( ((stdevTaus,stdevFvals)) ).flatten()
+        stdev = np.array( ((stdevFvals,stdevTaus)) ).flatten()
         modStr = modUtil.modelString("W1 Fit",fitParams,stdev,modelLabels,
                                      modelUnits,rsq)
 
@@ -130,9 +133,9 @@ def GetModelMain(residenceTimes,diffCoeffs,modelNums,frameRate = 0.1,plotRTD=Fal
         # all that remains is plotting.
         fig = plotUtil.pFigure()
         if (plotRTD):
-            numPlots = 1
-        else:
             numPlots = 2
+        else:
+            numPlots = 1
         pltCounter = 1
         # plot the residence time distribution (RTD)
         #plot the cummulative res time dist (CRTD)

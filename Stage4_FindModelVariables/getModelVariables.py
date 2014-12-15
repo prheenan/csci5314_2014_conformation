@@ -20,6 +20,23 @@ def getModelVariables(residenceTimes, probability, eqNumber,
     stdev = np.sqrt(np.diag(fitCov))
     predicted = model(xdata,*fitParams)
     rsq = modU.RSQ(predicted,probability)
-    return predicted,fitParams,stdev,rsq
+    if (len(fitParams) > 1):
+        # parameters go like [f1,f2,...,tau1,tau2]
+        numParams = len(fitParams)
+        numFits = numParams/2.
+        numfVals = np.floor(numFits)
+        fIndices = np.arange(0,numfVals,dtype=np.int32)
+        fVals = fitParams[fIndices]
+        # get the last f based on the models...
+        fStdevs = fitParams[fIndices]
+        lastF = 1 - np.sum(fVals)
+        lastFStdev = np.sqrt(np.sum(fStdevs**2))
+        #
+        fitParams = np.insert(fitParams,[numfVals],[lastF])
+        stdev = np.insert(stdev,[numfVals],[lastFStdev])
+    else:
+        fitParams = np.insert(fitParams,[0],[1])
+        stdev = np.insert(stdev,[0],[0])
+    return predicted,fitParams,(stdev),rsq
     
     
