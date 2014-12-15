@@ -13,30 +13,38 @@ def RSQ(yPred,yActual):
     SSres = np.sum((yPred-yActual)**2)
     return 1-SSres/SStot
 
-def modEq1(t, A, f, tau):
-    #Equation 2 from Walder 2014
-    toRet = A * f*np.exp(-t/tau)
+
+def modEqGen(t,fList,tauList):
+    # general 'wrapper' for all tau...
+    toRet = np.zeros(np.shape(t))
+    for tauI,fI in zip(tauList,fList):
+        if (tauI < 0 or fI < 0):
+            toRet += float('inf')
+        toRet += fI*np.exp(-t/tauI)
+    if (not np.isfinite(toRet).any()):
+        toRet += float('inf')
     return toRet
+
+def modEq1(t, f, tau):
+    #Equation 2 from Walder 2014
+    return modEqGen(t,[tau],[f])
 
 def modEqx(t, f, r, D, tau):
     #Equation 6 from Walder 2014
     return np.sum(f * np.exp((-r**2)/(4 * D * t)))
 
-def modEq2(t,A,f1,f2,tau1,tau2):
+
+def modEq2(t,f1,f2,tau1,tau2):
     toRet = 0
     tau  = [tau1,tau2]
     f = [f1,f2]
-    for tauI,fI in zip(tau,f):
-        toRet += modEq1(t,A,tauI,fI)
-    return toRet
+    return modEqGen(t,tau,f)
 
-def modEq3(t,A,f1,f2,f3,tau1,tau2,tau3):
+def modEq3(t,f1,f2,f3,tau1,tau2,tau3):
     toRet = 0
     tau  = [tau1,tau2,tau3]
     f = [f1,f2,f3]
-    for tauI,fI in zip(tau,f):
-        toRet += modEq1(t,A,tauI,fI)
-    return toRet
+    return modEqGen(t,f,tau)
 
 
 def modEquations(eqNumber):

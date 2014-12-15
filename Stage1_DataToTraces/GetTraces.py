@@ -123,6 +123,12 @@ def sqDeltaSum(vals):
     delta = np.subtract(vals,vals[0])
     return np.cumsum(delta*delta)
 
+def safePerObjectIndex(listToCheck,i1,i2):
+    # return the given data (first index) and value (i2) for each object in the list
+    # if there aren't real values, return -1, which we will catch later
+    return [ obj[i1][i2] if len(obj) > i1 and len(obj[i1]) >i2 else -1 for obj in listToCheck]
+
+
 def ProcessData(dataByObject,frameRate):
     # frameRate is in second
     # frames appearing is the first data point
@@ -137,18 +143,18 @@ def ProcessData(dataByObject,frameRate):
     xyIndex = 1
     xIndex = 0
     yIndex = 1
-    xVals = [ obj[xyIndex][xIndex] for obj in dataByObject]
-    yVals = [ obj[xyIndex][yIndex] for obj in dataByObject]
+    xVals = safePerObjectIndex(dataByObject,xyIndex,xIndex)
+    yVals = safePerObjectIndex(dataByObject,xyIndex,yIndex)
     MSD = [ 1/(np.arange(1,1+len(x))) * (sqDeltaSum(x) + sqDeltaSum(y))
             if len(x) > 1 else np.array([0]) for x,y in zip(xVals,yVals) ]
     velX = getVelocity(xVals,deltaTimes)
     velY = getVelocity(yVals,deltaTimes)
     # channel 1 (FRET donor) is the third
     donorIndex = 2
-    channel1 = [ obj[donorIndex][meanIndex] for obj in dataByObject]
+    channel1 =safePerObjectIndex(dataByObject,donorIndex,meanIndex)
     # channel 2 (FRET acceptor) is the fourth
     acceptorIndex = 3
-    channel2 = [ obj[acceptorIndex][meanIndex] for obj in dataByObject]
+    channel2 = safePerObjectIndex(dataByObject,acceptorIndex,meanIndex)
     #FRET Ratio is donor/acceptor (1/2)
     # XXX should probably check for a div/0 here...
     channel1Flatten=np.concatenate(channel1)

@@ -29,7 +29,10 @@ def mSecondAxis(ax,numProteins):
     plotUtil.secondAxis(ax,'Absolute Number of Proteins',[minY,numProteins])
 
 
-def GetModelMain(residenceTimes,diffCoeffs, frameRate = 0.1):
+def GetModelMain(residenceTimes,diffCoeffs,modelNums,frameRate = 0.1,plotRTD=False):
+    modParams = []
+    modStdev = []
+    modRSQ = []
     # get the 'overall' parameters for the time grid
     ravelTimes = np.concatenate(residenceTimes).flatten()
     numProteins = len(ravelTimes)
@@ -61,11 +64,10 @@ def GetModelMain(residenceTimes,diffCoeffs, frameRate = 0.1):
     # get the proportion unfolded, cummulatively (cummu residence time dist)
     # XXX could label the dots with only a single protein...
     RTD = countAvg/numProteins
-    CRTD = 1.-np.cumsum(RTD)
+    CRTD = 1.-np.cumsum(RTD,dtype=np.float64)
     rtdErr = countErr/numProteins
-    crtdErr = np.cumsum(rtdErr)
+    crtdErr = np.cumsum(rtdErr,dtype=np.float64)
 
-    modelNums = [1,2,3]
 
         # POST: we have all the final data we need. Go ahead and save.
     util.saveAll([timeGrid,timeRtd,CRTD,RTD],
@@ -73,9 +75,8 @@ def GetModelMain(residenceTimes,diffCoeffs, frameRate = 0.1):
                  [util.IO_Stage3Folder])
 
     for modelNumber in modelNums:
-        modelLabels = ['A']
-        # start off with a guess of 1 for 'A'
-        modelGuess = [1]
+        modelLabels = []
+        modelGuess = []
         # create lists to make all the tau and fs.
         freqLabels = ['f0']
         tauLabels = ['tau0']
@@ -97,13 +98,41 @@ def GetModelMain(residenceTimes,diffCoeffs, frameRate = 0.1):
                 modelUnits.append('au')
         else:
             modelUnits.append('s')
-        modelProb,fitParams,stdev,rsq =modHelp.\
+        modelProb,fitUnordered,stdUnordered,rsq =modHelp.\
                                     getModelVariables(timeRtd,CRTD,modelNumber,modelGuess)
+        # fit parameters may be out of order (don't enforce that in the model)
+        #  go ahead and sort them. This is just a labelling thing, and doesn't change the physics
+        numParams = len(fitUnordered)
+        middle = numParams/2
+        indicesTau = np.arange(middle,numParams,dtype=np.int32)
+        indicesF = np.arange(0,middle,dtype=np.int32)
+        taus = fitUnordered[indicesTau]
+        sortIndices = np.argsort(taus)
+        taus = taus[sortIndices]
+        fVals = fitUnordered[indicesF][sortIndices]
+        stdevTaus = stdUnordered[indicesTau][sortIndices]
+        stdevFvals = stdUnordered[indicesF][sortIndices]
+        fitParams = np.array( ((fVals,taus)) ).flatten()
+        # second is stdev
+        stdev = np.array( ((stdevTaus,stdevFvals)) ).flatten()
         modStr = modUtil.modelString("W1 Fit",fitParams,stdev,modelLabels,
                                      modelUnits,rsq)
+
+        util.saveAll([fitParams,stdev,[rsq]],
+                     [util.getModelFile(util.IO_model,modelNumber),
+                      util.getModelFile(util.IO_model_stdevs,modelNumber),
+                      util.getModelFile(util.IO_model_rsq,modelNumber)],
+                     [util.IO_Stage3Folder])
+        modParams.append(fitParams)
+        modStdev.append(stdev)
+        modRSQ.append([rsq])
+
         # all that remains is plotting.
         fig = plotUtil.pFigure()
-        numPlots = 2
+        if (plotRTD):
+            numPlots = 1
+        else:
+            numPlots = 2
         pltCounter = 1
         # plot the residence time distribution (RTD)
         #plot the cummulative res time dist (CRTD)
@@ -120,16 +149,18 @@ def GetModelMain(residenceTimes,diffCoeffs, frameRate = 0.1):
         mSecondAxis(axCRTD,numProteins)
         nStr = plotUtil.getNStr(numProteins)
         pltCounter += 1
-        axRTD = fig.add_subplot(numPlots,1,pltCounter)
-        axRTD.set_yscale('log')
-        plt.errorbar(x=timeRtd,y=RTD,yerr=rtdErr,fmt='ro-')
-        mSecondAxis(axRTD,numProteins)
-        plt.ylabel('Probability to fold during time window t')
-        plt.title('Residence Time Distribution: P(t) vs t for' + nStr + ' is noisier than CRTD')
-        pltCounter += 1
+        if (plotRTD):
+            axRTD = fig.add_subplot(numPlots,1,pltCounter)
+            axRTD.set_yscale('log')
+            plt.errorbar(x=timeRtd,y=RTD,yerr=rtdErr,fmt='ro-')
+            mSecondAxis(axRTD,numProteins)
+            plt.ylabel('Probability to fold during time window t')
+            plt.title('Residence Time Distribution: P(t) vs t for' + nStr + ' is noisier than CRTD')
+            pltCounter += 1
         plt.tight_layout()#pad=0.4, w_pad=0.5, h_pad=1.0)
         # save the figure
         plotUtil.saveFigure(fig,'RTD_model' +str(modelNumber))
+    return modParams,modStdev,modRSQ
 
     
     

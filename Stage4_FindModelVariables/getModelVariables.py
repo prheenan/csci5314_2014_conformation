@@ -16,7 +16,7 @@ def getModelVariables(residenceTimes, probability, eqNumber,
     xdata = residenceTimes
     ydata = probability
     #Use curve_fit with given times and probability on the given eq. Number
-    fitParams, fitCov = curve_fit(model, xdata,ydata, paramGuess)
+    fitParams, fitCov = curve_fit(model, xdata,ydata, p0=paramGuess)
     stdev = np.sqrt(np.diag(fitCov))
     predicted = model(xdata,*fitParams)
     rsq = modU.RSQ(predicted,probability)

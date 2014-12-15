@@ -28,20 +28,27 @@ IO_time_CRTD = "GetModel_Time_For_CRTD"
 IO_time_RTD = "GetModel_Time_For_RTD"
 IO_CRTD = "GetModel_CRTD"
 IO_RTD = "GetModel_RTD"
+IO_model = "ModelParams"
+IO_model_stdevs = "ModelParamsStd"
+IO_model_rsq = "ModelParamRsq"
 
+def getModelFile(baseName,modelNum):
+    return baseName + str(modelNum)
 
 class outputHelper:
     globalOutput = "../output"
     def __init__(self):
-        self.Trial = "No Trial"
-        self.fil = "No File" 
-        self.st = "No Step"
+        self.reset()
     def setTrial(self,Trial):
         self.trial = Trial
     def setFile(self,File):
         self.fil = File
     def setStep(self,step):
         self.st = step
+    def reset(self):
+        self.trial = ""
+        self.fil = "" 
+        self.st = ""
     def getOutputDir(self,path, fileName = ""):
         # path is a list of paths
         if (fileName == -1):
@@ -115,7 +122,7 @@ def humanReadableSave(listToSave,fileName,header):
         # check if the first element is a list.
         try:
             writeObj.writerows(listToSave)
-        except csv.Error as e:
+        except (csv.Error) as e:
             # must not be a list
             writeObj.writerows([listToSave])
                             

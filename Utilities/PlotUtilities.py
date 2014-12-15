@@ -7,6 +7,9 @@ matplotlib.use('AGG')
 import matplotlib.pyplot  as plt
 # import numpy for array stuff
 import numpy as np
+# for color cycling
+from itertools import cycle
+
 
 def normalizedBins(array):
     # return the 'normalized' bins or bins numbers for histogramming
@@ -77,18 +80,29 @@ def histogramPlotFull(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
     return ax,n,bins
 
 
-def secondAxis(ax,label,limits,secondY =True):
+def cycleColors():
+    nonSuckyColors = ['r','g','b','k']
+    return cycle(nonSuckyColors)
+        
+
+
+def secondAxis(ax,label,limits,secondY =True,yColor="Black"):
     #copies the first axis (ax) and uses it to overlay an axis of limits
     if(secondY):
         ax2 = ax.twinx()
         ax2.set_yscale(ax.get_yscale(), nonposy='clip')
         ax2.set_ylim(limits)
-        ax2.set_ylabel(label)
+        lab = ax2.set_ylabel(label)
+        ticks = ax2.get_yticklabels()
     else:
         ax2 = ax.twiny()
         ax2.set_xscale(ax.get_xscale(), nonposy='clip')
         ax2.set_xlim(limits)
-        ax2.set_xlabel(label)
+        lab = ax2.set_xlabel(label)
+        ticks = ax2.get_xticklabels()
+    [i.set_color(yColor) for i in ticks]
+    lab.set_color(yColor)
+    return ax2
 
 def saveFigure(figure,fileName):
     # source : where to save the output iunder the output folder
