@@ -101,28 +101,31 @@ for tNum,t in enumerate(trials):
                 # each of these is a list. Each element in a list corresponds to data
                 # for a single protein
                 trackedTimes,trackedFRET,trackedDiffusion = \
-                                                            GetTraces.GetTracesMain(f)
+                                            GetTraces.GetTracesMain(f)
                 # get the output dir for the previous path. 
             else:
                 # the output directory exists; no sense in re-running the analysis.
                 # just use the text output.
-                Utilities.ReportMessage("Skipping Stage1 since [" + cacheFileS1 + 
+                Utilities.ReportMessage("Skipping Stage1 since [" + 
+                                        cacheFileS1 + 
                                         "] already exists")
                 trackedTimes, trackedDiffusion,trackedFRET = \
-                                            Utilities.loadAll(stage1Folder,fileNamesStage1)
+                                Utilities.loadAll(stage1Folder,fileNamesStage1)
                 # POST: now have valid, trackable diffusion, times, and FRET
                 # Move to stage 2. where we get the unfolding times
                 Utilities.globalIO.setStep("Step2::GetPhysics")
                 if (not Utilities.dirExists(cacheFileS2)
                     or forceStage2):
                     unfoldingTimes, diffusionCoeffs,trackedIndices = \
-                                        GetPhysics.GetPhysicsMain(trackedTimes
-                                                        ,trackedFRET,trackedDiffusion)
+                            GetPhysics.GetPhysicsMain(trackedTimes
+                                                      ,trackedFRET,
+                                                      trackedDiffusion)
                 else:
-                    Utilities.ReportMessage("Skipping Stage2 since [" + cacheFileS2 + 
+                    Utilities.ReportMessage("Skipping Stage2 since [" +
+                                            cacheFileS2 + 
                                             "] already exists")
                     unfoldingTimes, diffusionCoeffs,trackedIndices = \
-                                                Utilities.loadAll(stage2Folder,fileNamesStage2)
+                            Utilities.loadAll(stage2Folder,fileNamesStage2)
                     # XXX fix ths flattening
             trialTimes.append(unfoldingTimes)
             trialDiff.append(diffusionCoeffs)
@@ -133,9 +136,11 @@ for tNum,t in enumerate(trials):
         # no longer in any particular file, so save everything in the 'top level'
         Utilities.globalIO.setFile("")
 
-        params,stdev,RSQ = GetModel.GetModelMain(trialTimes,trialDiff,modelsToUse)
+        params,stdev,RSQ = GetModel.GetModelMain(trialTimes,trialDiff,
+                                                 modelsToUse)
     else:
-        # stage 3 files exist. Just need to load the files to be able to compare...
+        # stage 3 files exist. Just need to load the files to be able 
+        # to compare...
         params = []
         stdev = []
         RSQ = []

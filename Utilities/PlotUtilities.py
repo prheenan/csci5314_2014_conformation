@@ -83,8 +83,6 @@ def histogramPlotFull(ax,xlabelStr,ylabelStr,titleStr,data,numBins,
 def cycleColors():
     nonSuckyColors = ['r','g','b','k']
     return cycle(nonSuckyColors)
-        
-
 
 def secondAxis(ax,label,limits,secondY =True,yColor="Black"):
     #copies the first axis (ax) and uses it to overlay an axis of limits
@@ -104,16 +102,21 @@ def secondAxis(ax,label,limits,secondY =True,yColor="Black"):
     lab.set_color(yColor)
     return ax2
 
-def saveFigure(figure,fileName):
+def saveFigure(figure,fileName,overrideIO=False,close=True):
     # source : where to save the output iunder the output folder
     # filename: what to save the file as. automagically saved as high res pdf
     step = util.globalIO.st
-    fullPath = util.globalIO.getOutputDir([step],fileName)
+    if (overrideIO):
+        fullPath = util.globalIO.getOutputDir([step],fileName)
+    else:
+        fullPath = fileName
     plt.tight_layout(False)
     formatStr = "png"
+    print(fullPath)
     figure.savefig(fullPath + '.' + formatStr,format=formatStr, 
                    dpi=figure.get_dpi())
-    plt.close(figure)
+    if (close):
+        plt.close(figure)
 
 def pFigure(ySize=10,xSize=8,dpiArg=100):
     return  plt.figure(figsize=(ySize,xSize),dpi=dpiArg)

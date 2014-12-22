@@ -151,6 +151,8 @@ def GetModelMain(residenceTimes,diffCoeffs,modelNums,frameRate = 0.1,plotRTD=Fal
         plt.legend()
         mSecondAxis(axCRTD,numProteins)
         nStr = plotUtil.getNStr(numProteins)
+        print(list(CRTD))
+        print(list(timeRtd))
         pltCounter += 1
         if (plotRTD):
             axRTD = fig.add_subplot(numPlots,1,pltCounter)
