@@ -70,8 +70,6 @@ def exponentialfit(modelNumber,timeRtd,CRTD):
             modelUnits.append('au')
         else:
             modelUnits.append('s')
-    print(modelNumber)
-    print(modelGuess)
     modelProb,fitUnordered,stdUnordered,rsq =modHelp.\
                                               getModelVariables(timeRtd,CRTD,modelNumber,modelGuess)
     fitUnordered,stdUnordered = modUtil.exponentialGetFinalParams( fitUnordered,stdUnordered)
@@ -191,8 +189,6 @@ def GetModelMain(residenceTimes,diffCoeffs,modelNums,frameRate = 0.1,plotRTD=Fal
         plt.legend()
         mSecondAxis(axCRTD,numProteins)
         nStr = plotUtil.getNStr(numProteins)
-        print(list(CRTD))
-        print(list(timeRtd))
         pltCounter += 1
         if (plotRTD):
             axRTD = fig.add_subplot(numPlots,1,pltCounter)

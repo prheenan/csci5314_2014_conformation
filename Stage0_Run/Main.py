@@ -69,7 +69,8 @@ for tNum,t in enumerate(trials):
     trialTimes = []
     trialDiff = []
     Utilities.globalIO.setTrial(t)
-    stage3Folder = Utilities.globalIO.getOutputDir([],"") + Utilities.IO_Stage3Folder
+    stage3Folder = (Utilities.globalIO.getOutputDir([],"") +
+                    Utilities.IO_Stage3Folder)
     # stage 3 recquires knowing which model we will use...
     # XXX fix this to allow for different models? Pass as a param to model.
     cacheFileS3 = stage3Folder + Utilities.getModelFile(fileNamesStage3[0],1) \
@@ -91,12 +92,12 @@ for tNum,t in enumerate(trials):
             cacheFileS1 = stage1Folder + fileNamesStage1[0] + extFile
             cacheFileS2 = stage2Folder + fileNamesStage2[0] + extFile
 
-            # Next, start stage 1 if we need it; otherwise just pull in the needed 
-            # variables.
+            # Next, start stage 1 if we need it; 
+            #otherwise just pull in the needed variables.
             if (not Utilities.dirExists(cacheFileS1)
                 or forceStage1):
                 # get the X,Y velocity, times, and ratio on a per protein basis
-                # each of these is a list. Each element in a list corresponds to data
+                # each of these is a list. Each element  corresponds to data
                 # for a single protein
                 trackedTimes,trackedFRET,trackedDiffusion = \
                                             GetTraces.GetTracesMain(f)
@@ -181,7 +182,8 @@ for t in range(numTrials):
     mLabel = trials[t]
     ax.bar(xVals[0:numVals],meanVals,width=wid,yerr=0.2*stdVals,
            color=mColor,error_kw = barDict,align='center',label=mLabel)
-    axRSQ.bar(xVals[numVals],RSQ,width=wid,color=mColor,align='center',label=mLabel)
+    axRSQ.bar(xVals[numVals],RSQ,width=wid,color=mColor,align='center',
+              label=mLabel)
     # only the second time, add a third axis
 #axRSQ.set_yscale('log')
 ax.legend(loc='upper left')

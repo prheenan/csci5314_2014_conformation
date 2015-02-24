@@ -116,7 +116,7 @@ def normalize(arr,minV=-1,maxV=-1):
 def humanReadableSave(listToSave,fileName,header):
     # if opening a file object, use newline ='' , according to:
     # https://docs.python.org/3/library/csv.html#id2
-    with open(fileName + ".csv","w",newline='') as f:
+    with open(fileName + ".csv","w") as f:
         writeObj = csv.writer(f)
         # XXX move this? right now, try and catch. prolly should just
         # check if the first element is a list.

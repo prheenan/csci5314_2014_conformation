@@ -16,7 +16,7 @@ def modelStrGen(params,paramsStd,predicted,actual,labels,modelString,
     paramStr = []
     count =0
     for l,p,std in zip(labels,params,paramsStd):
-        thisModel = "{0:s}={1:.2f}±{2:.2f}".format(l,p,std)
+        thisModel = "{0:s}={1:.2f} +/- {2:.2f}".format(l,p,std)
         paramStr.append(thisModel)
         if (count % 2 == 0 and count > 0 ):
             model += '\n' + thisModel
