@@ -18,6 +18,83 @@ import getModelVariables as modHelp
 from itertools import cycle
 import matplotlib.pyplot as plt
 
+
+
+
+def logfit(modelNumber,timeRtd,CRTD):
+    # for the logarithmic fit, use the log of the 
+    # CRTD, then scale th resulting probabilities.
+    yVals = np.log(CRTD)
+    # this model has two parameters. The first
+    # is the time for half binding loss. the second is the 
+    # time scaling.
+    modelProb,fitParams,stdev,rsq = \
+                    modHelp.getModelVariables(timeRtd, 
+                                      yVals, modelNumber,paramGuess = [1,10])
+    modStr = modUtil.hyperfitLogStr(fitParams,stdev,modelProb,yVals)
+    modelProb = np.exp(modelProb)
+    return modelProb,fitParams,stdev,rsq,modStr
+
+
+def exponentialfit(modelNumber,timeRtd,CRTD):
+    # get the expnential fit based on the model numbers.
+    modelLabels = []
+    modelGuess = []
+    # create lists to make all the tau and fs.
+    freqLabels = []
+    tauLabels = []
+    # start off with an initial guess, go down logarithmically
+    # (in other words, divide, don't subtract)
+    guessTau = 1
+    guessF = 1
+    divisor = 10
+    tauGuess = []
+    freqGuess = []
+    #modelNumber-1 gives number of taus
+    for i in range(modelNumber):
+        freqLabels.append('f' + str(i))
+        tauLabels.append('tau'+str(i))
+        tauGuess.append(guessTau/divisor)
+        freqGuess.append(guessF/divisor)
+        # divide the guesses for the next round...
+        guessTau = guessTau/divisor
+        guessF = guessF/divisor
+    # ignore the last frequency
+    modelGuess.extend(freqGuess[:-1])
+    modelGuess.extend(tauGuess)
+    modelLabels.extend(freqLabels)
+    modelLabels.extend(tauLabels)
+    modelUnits = []
+    for m in modelLabels:
+        if ['A' in m or 'f' in m]:
+            modelUnits.append('au')
+        else:
+            modelUnits.append('s')
+    print(modelNumber)
+    print(modelGuess)
+    modelProb,fitUnordered,stdUnordered,rsq =modHelp.\
+                                              getModelVariables(timeRtd,CRTD,modelNumber,modelGuess)
+    fitUnordered,stdUnordered = modUtil.exponentialGetFinalParams( fitUnordered,stdUnordered)
+    # fit parameters may be out of order (don't enforce that in the model)
+    #  go ahead and sort them. This is just a labelling thing, and doesn't change the physics
+    numParams = len(fitUnordered)
+    middle = numParams/2
+    indicesTau = np.arange(middle,numParams,dtype=np.int32)
+    indicesF = np.arange(0,middle,dtype=np.int32)
+    taus = fitUnordered[indicesTau]
+    sortIndices = np.argsort(taus)
+    taus = taus[sortIndices]
+    fVals = fitUnordered[indicesF][sortIndices]
+    stdevTaus = stdUnordered[indicesTau][sortIndices]
+    stdevFvals = stdUnordered[indicesF][sortIndices]
+    fitParams = np.array( ((fVals,taus)) ).flatten()
+    # second is stdev
+    stdev = np.array( ((stdevFvals,stdevTaus)) ).flatten()
+    modStr = modUtil.modelString("W1 Fit",fitParams,stdev,modelLabels,
+                                                 modelUnits,rsq)
+    return modelProb,fitParams,stdev,rsq,modStr
+
+
 def getIndicesWithChanges(counts):
     cumDiff = np.abs(np.diff(counts))
     idx = (np.where(cumDiff != 0)[0])
@@ -67,60 +144,24 @@ def GetModelMain(residenceTimes,diffCoeffs,modelNums,frameRate = 0.1,plotRTD=Fal
     CRTD = 1.-np.cumsum(RTD,dtype=np.float64)
     rtdErr = countErr/numProteins
     crtdErr = np.cumsum(rtdErr,dtype=np.float64)
-
-
-        # POST: we have all the final data we need. Go ahead and save.
+    # POST: we have all the final data we need. Go ahead and save.
     util.saveAll([timeGrid,timeRtd,CRTD,RTD],
                  [util.IO_time_CRTD,util.IO_time_RTD,util.IO_CRTD,util.IO_RTD],
                  [util.IO_Stage3Folder])
 
     for modelNumber in modelNums:
-        modelLabels = []
-        modelGuess = []
-        # create lists to make all the tau and fs.
-        freqLabels = ['f0']
-        tauLabels = ['tau0']
-        # start off with an initial guess
-        tauGuess = [1]
-        freqGuess = [1]
-        #modelNumber-1 gives number of taus
-        #modelNumber-1 gives number of taud (but only fit modelNumber-1)
-        for i in range(modelNumber-1):
-            freqLabels.append('f' + str(i))
-            tauLabels.append('tau'+str(i))
-            tauGuess.append(tauGuess[i]/10)
-            freqGuess.append(freqGuess[i]/10)
-        if (modelNumber > 1):
-            modelGuess.extend(freqGuess[1:])
-        modelGuess.extend(tauGuess)
-        modelLabels.extend(freqLabels)
-        modelLabels.extend(tauLabels)
-        modelUnits = []
-        for m in modelLabels:
-            if ['A' in m or 'f' in m]:
-                modelUnits.append('au')
+        # XXX need to come up with a way of putting models in and out. For now, just have two (really), so
+        # just jludge for now.
+        if (modelNumber < 4):
+            # use the walder 'sum of exponential' fit.
+            # this has 2*N-1 parameters per order. One of the 'f' parameters
+            # is calculatable. They usually use N=3 for large numbers
+            modelProb,fitParams,stdev,rsq,modStr= exponentialfit(modelNumber,timeRtd,CRTD)
         else:
-            modelUnits.append('s')
-        modelProb,fitUnordered,stdUnordered,rsq =modHelp.\
-                                    getModelVariables(timeRtd,CRTD,modelNumber,modelGuess)
-        # fit parameters may be out of order (don't enforce that in the model)
-        #  go ahead and sort them. This is just a labelling thing, and doesn't change the physics
-        numParams = len(fitUnordered)
-        middle = numParams/2
-        indicesTau = np.arange(middle,numParams,dtype=np.int32)
-        indicesF = np.arange(0,middle,dtype=np.int32)
-        taus = fitUnordered[indicesTau]
-        sortIndices = np.argsort(taus)
-        taus = taus[sortIndices]
-        fVals = fitUnordered[indicesF][sortIndices]
-        stdevTaus = stdUnordered[indicesTau][sortIndices]
-        stdevFvals = stdUnordered[indicesF][sortIndices]
-        fitParams = np.array( ((fVals,taus)) ).flatten()
-        # second is stdev
-        stdev = np.array( ((stdevFvals,stdevTaus)) ).flatten()
-        modStr = modUtil.modelString("W1 Fit",fitParams,stdev,modelLabels,
-                                     modelUnits,rsq)
-
+            # use the Poisson(binding) one I thought of.
+            # this has two parameters (maybe just one)
+            modelProb,fitParams,stdev,rsq,modStr= logfit(modelNumber,timeRtd,CRTD)
+        
         util.saveAll([fitParams,stdev,[rsq]],
                      [util.getModelFile(util.IO_model,modelNumber),
                       util.getModelFile(util.IO_model_stdevs,modelNumber),
@@ -129,7 +170,6 @@ def GetModelMain(residenceTimes,diffCoeffs,modelNums,frameRate = 0.1,plotRTD=Fal
         modParams.append(fitParams)
         modStdev.append(stdev)
         modRSQ.append([rsq])
-
         # all that remains is plotting.
         fig = plotUtil.pFigure()
         if (plotRTD):
@@ -166,6 +206,8 @@ def GetModelMain(residenceTimes,diffCoeffs,modelNums,frameRate = 0.1,plotRTD=Fal
         # save the figure
         plotUtil.saveFigure(fig,'RTD_model' +str(modelNumber))
     return modParams,modStdev,modRSQ
+
+
 
     
     

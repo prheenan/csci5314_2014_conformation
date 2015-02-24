@@ -10,28 +10,6 @@ import PlotUtilities as pltUtil
 def hyperfit(t,a,b):
     return np.exp(hyperfitLog(t,a,b))
 
-def modelStrGen(params,paramsStd,predicted,actual,labels,modelString,
-                returnParams=False):
-    # generic string generation. Useful for labelled plots
-    model = '{0:s}, RSQ: {1:.3f}\n'.format(modelString,
-                                         Mod.RSQ(predicted,actual))
-    paramStr = []
-    count =0
-    for l,p,std in zip(labels,params,paramsStd):
-        thisModel = "{0:s}={1:.2f}±{2:.2f}".format(l,p,std)
-        paramStr.append(thisModel)
-        if (count % 2 == 0 and count > 0 ):
-            model += '\n' + thisModel
-        elif (count > 0):
-            model += ', ' + thisModel
-        else:
-            model += thisModel
-        count += 1
-    if (returnParams):
-        return model,paramStr
-    else:
-        return model
-
 def fitStr(params,paramsStd,predicted,actual,returnParams=False):
     modelStr = 'e^(-b*(t/t+a))'
     labels=['a','b']

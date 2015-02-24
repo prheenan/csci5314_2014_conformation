@@ -33,7 +33,7 @@ testDataType=".dat"
 trials = ["5x_PBS_25C_","AP2_minus6_AHAPS","AP2_minus6_pbs","AP2minus4_FS"]
 numTrials = len(trials)
 # mean, stdev, and RSQ for the first tau (for now
-statsLabel = ['Tau0','Tau1','RSQ']
+statsLabel = ['A[seconds]','B[au]','RSQ']
 # each tau value (everything except RSQ) has an uncertainty
 numBars = len(statsLabel)
 numParams = (numBars-1)*2+1
@@ -51,7 +51,7 @@ forceStage1 = False
 forceStage2 = False
 forceStage3 = True
 # the numbers in the modeling file, determining which models we will use..
-modelsToUse = [1,2,3]
+modelsToUse = [4]
 # look for 'cached' files, which allow us to save the previous stages, speeding up everything a lot.
 extFile = ".npy"
 
@@ -62,8 +62,6 @@ if (len(filesFound) < 1):
     msg = "Couldn't find any file like [{}] in [{}]".format(testDataType,
                                                             testDir)
     Utilities.ReportError(True,msg,"Main.py")
-
-
 
 for tNum,t in enumerate(trials):
     # get the matching files for this trial
@@ -135,7 +133,6 @@ for tNum,t in enumerate(trials):
         Utilities.globalIO.setStep("Step3::GetModel")
         # no longer in any particular file, so save everything in the 'top level'
         Utilities.globalIO.setFile("")
-
         params,stdev,RSQ = GetModel.GetModelMain(trialTimes,trialDiff,
                                                  modelsToUse)
     else:
@@ -154,8 +151,9 @@ for tNum,t in enumerate(trials):
         Utilities.ReportMessage("Skipping Stage3 since [" + cacheFileS3 + 
                                 "] already exists, plotting comparison.")
     # for each trial, for now just look at a single Model
-    modelToCheck = 1
-    fitStdRsq = [params[modelToCheck][-(modelToCheck+1):],stdev[modelToCheck][-(modelToCheck+1):],RSQ[modelToCheck]]
+    # XXX fix this!...    
+    modelToCheck = 0
+    fitStdRsq = [params[modelToCheck][:],stdev[modelToCheck][:],RSQ[modelToCheck]]
     stats = np.concatenate(fitStdRsq)
     trialStats[tNum,:] = stats
 

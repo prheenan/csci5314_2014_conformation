@@ -105,14 +105,15 @@ def secondAxis(ax,label,limits,secondY =True,yColor="Black"):
 def saveFigure(figure,fileName,overrideIO=False,close=True):
     # source : where to save the output iunder the output folder
     # filename: what to save the file as. automagically saved as high res pdf
+    # override IO: if true, ignore any path infomation in the file name stuff.
+    # close: if true, close the figure after saving.
     step = util.globalIO.st
     if (overrideIO):
-        fullPath = util.globalIO.getOutputDir([step],fileName)
-    else:
         fullPath = fileName
+    else:
+        fullPath = util.globalIO.getOutputDir([step],fileName)
     plt.tight_layout(False)
     formatStr = "png"
-    print(fullPath)
     figure.savefig(fullPath + '.' + formatStr,format=formatStr, 
                    dpi=figure.get_dpi())
     if (close):

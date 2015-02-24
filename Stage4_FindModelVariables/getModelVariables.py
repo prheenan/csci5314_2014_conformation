@@ -8,7 +8,7 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 def getModelVariables(residenceTimes, probability, eqNumber,
-                      paramGuess = [1,0.5,1.5]):
+                      paramGuess = [1,0.5,1.5],finalParameters=None):
     #Use ModUtilities to get model equation 'eqNumber' to fit
     # x values 'residence times' against y values 'probability'
     #Initial guess for variables A, f, tau in that order is given by paramGuess 
@@ -20,23 +20,8 @@ def getModelVariables(residenceTimes, probability, eqNumber,
     stdev = np.sqrt(np.diag(fitCov))
     predicted = model(xdata,*fitParams)
     rsq = modU.RSQ(predicted,probability)
-    if (len(fitParams) > 1):
-        # parameters go like [f1,f2,...,tau1,tau2]
-        numParams = len(fitParams)
-        numFits = numParams/2.
-        numfVals = np.floor(numFits)
-        fIndices = np.arange(0,numfVals,dtype=np.int32)
-        fVals = fitParams[fIndices]
-        # get the last f based on the models...
-        fStdevs = fitParams[fIndices]
-        lastF = 1 - np.sum(fVals)
-        lastFStdev = np.sqrt(np.sum(fStdevs**2))
-        #
-        fitParams = np.insert(fitParams,[numfVals],[lastF])
-        stdev = np.insert(stdev,[numfVals],[lastFStdev])
-    else:
-        fitParams = np.insert(fitParams,[0],[1])
-        stdev = np.insert(stdev,[0],[0])
+    if (finalParameters is not None):
+        predicted,stdev = finalParameters(predicted,stdev)
     return predicted,fitParams,(stdev),rsq
     
     
