@@ -7,17 +7,9 @@ import csv
 from scipy import stats
 
 
-IO_Stage1Folder = 'Post_Stage1_Analysis/'
-IO_Stage2Folder = 'Post_Stage2_Analysis/'
 IO_Stage3Folder = 'Post_Stage3_Analysis/'
-
-# define some file names used at each step for saving 'artifacts'.
-# This immensely speeds up runtimes for later stages.
-IO_frames = 'Per_Protein_Frames_Appearing'
-IO_numFrames =  'Per_Protein_Num_Frames'
-IO_fret = 'Per_Protein_Fret_Ratio'
-IO_msd = 'MSD_Per_Protein'
-IO_diff = 'Per_Protein_Diff_Coeff'
+# within a given directory, put all the checkpoints in the same place.
+CheckpointDir = 'DataCheckpoints/'
 # 'indices' is used by getPhysics to index into the proteins which were used
 # to generate all the subsequent data. In other words, if you index into
 # any of the stage 1 files with these indices, you will get all the 
@@ -49,7 +41,9 @@ class outputHelper:
         self.trial = ""
         self.fil = "" 
         self.st = ""
-    def getOutputDir(self,path, fileName = ""):
+    def getOutputDir(self,path=None, fileName = ""):
+        if (path is None):
+            path = ['']
         # path is a list of paths
         if (fileName == -1):
             fileName = self.st
@@ -81,8 +75,7 @@ def takeSubset(original,indices):
 def ReportError(isFatal=False, description="None Given",source="-1"):
     ReportMessage("Error [" + description +"]",source)
     if (isFatal):
-        print("\tError was fatal. Exiting.")
-        exit(-1)
+        raise StandardError
 
 def ReportMessage(description="None Given",source="-1"):
     if (source == "-1"):
@@ -126,6 +119,7 @@ def humanReadableSave(listToSave,fileName,header):
             # must not be a list
             writeObj.writerows([listToSave])
                             
+
 
 def saveAll(matricesToSave,labels,thisPath,saveCSVForHumans=True):
     # matricesToSave: a list of N matrices to save

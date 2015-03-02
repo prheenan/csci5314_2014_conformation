@@ -1,3 +1,5 @@
+# force floating point division. Can still use integer with //
+from __future__ import division
 # use numpy for array operations
 import numpy as np
 # import sys for file and path stuff
@@ -5,6 +7,7 @@ import sys
 # add the utilities and model helper so we can fit
 sys.path.append('../Utilities')
 sys.path.append('../Stage4_FindModelVariables')
+sys.path.append('../Base')
 
 # import the util file.
 import Utilities as util
@@ -17,6 +20,8 @@ import getModelVariables as modHelp
 # import cycling..
 from itertools import cycle
 import matplotlib.pyplot as plt
+# import the data filtering stuff
+import Filter
 
 
 
@@ -104,12 +109,15 @@ def mSecondAxis(ax,numProteins):
     plotUtil.secondAxis(ax,'Absolute Number of Proteins',[minY,numProteins])
 
 
-def GetModelMain(residenceTimes,diffCoeffs,modelNums,frameRate = 0.1,plotRTD=False):
+def GetModelMain(allData,modelNums,frameRate = 0.1,plotRTD=False):
     modParams = []
     modStdev = []
     modRSQ = []
     # get the 'overall' parameters for the time grid
-    ravelTimes = np.concatenate(residenceTimes).flatten()
+    concatData = Filter.DataFilter.concatenate(allData)
+    residenceTimes = concatData.getSingleVal(Filter.prop_resi)
+    ravelTimes = residenceTimes.flatten()
+    print(ravelTimes.shape)
     numProteins = len(ravelTimes)
     sortedRavelTimes = np.sort(ravelTimes)
     diffTimes = np.gradient(np.unique(sortedRavelTimes))
@@ -205,5 +213,3 @@ def GetModelMain(residenceTimes,diffCoeffs,modelNums,frameRate = 0.1,plotRTD=Fal
 
 
 
-    
-    

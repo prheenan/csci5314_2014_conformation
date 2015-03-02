@@ -3,8 +3,9 @@ import os
 # include sys to add things to the path
 import sys
 # more or less a way of 'C-style' importing,  to be able to run wherever
+# XXX TODO : should fix this out here
 foldersToImport = ['Stage0_Run','Stage1_DataToTraces','Stage2_TracesToPhyscs',
-                   'Stage3_PhysicsToModel','Testing','Utilities']
+                   'Stage3_PhysicsToModel','Testing','Utilities','Base']
 for f in foldersToImport:
     # do a relative and absoute add.
     tmpF = '/' + f + '/'
@@ -21,6 +22,7 @@ import Utilities
 import PlotUtilities as pltUtil
 import matplotlib.pyplot as plt
 import numpy as np
+import Filter
 
 # XXX below lines test this functioon
 testDir="../Data/ObjTr/"
@@ -41,9 +43,6 @@ numParams = (numBars-1)*2+1
 trialStats = np.zeros((numTrials,numParams))
 # mean will just have error bars...
 
-# file names for stage 1, defined in the common utility class.
-fileNamesStage1 = [Utilities.IO_frames,Utilities.IO_diff,Utilities.IO_fret]
-fileNamesStage2 = [Utilities.IO_frames,Utilities.IO_diff,Utilities.IO_indices]
 fileNamesStage3 = [Utilities.IO_model,Utilities.IO_model_stdevs,Utilities.IO_model_rsq]
 
 # can 'force' a re-calulation of the data
@@ -70,7 +69,7 @@ for tNum,t in enumerate(trials):
     trialDiff = []
     Utilities.globalIO.setTrial(t)
     stage3Folder = (Utilities.globalIO.getOutputDir([],"") +
-                    Utilities.IO_Stage3Folder)
+                    Utilities.CheckpointDir)
     # stage 3 recquires knowing which model we will use...
     # XXX fix this to allow for different models? Pass as a param to model.
     cacheFileS3 = stage3Folder + Utilities.getModelFile(fileNamesStage3[0],1) \
@@ -78,6 +77,7 @@ for tNum,t in enumerate(trials):
     # if we have stage3, then just skip to the final ....
     if (not Utilities.dirExists(cacheFileS3)
         or forceStage3):
+        fileData = []
         for f in trialFiles:
             fileNameExt = os.path.basename(f)
             fileName = os.path.splitext(fileNameExt)[0]
@@ -86,56 +86,38 @@ for tNum,t in enumerate(trials):
 
             # get the output dir with no prior / after path
             outputDir = Utilities.globalIO.getOutputDir([],"")
-            stage1Folder = outputDir + Utilities.IO_Stage1Folder
-            stage2Folder = outputDir + Utilities.IO_Stage2Folder
-
-            cacheFileS1 = stage1Folder + fileNamesStage1[0] + extFile
-            cacheFileS2 = stage2Folder + fileNamesStage2[0] + extFile
-
+            checkPointDir = outputDir + Utilities.CheckpointDir
+            checkPointFilePath = checkPointDir + 'Stage_'
+            # ensure the saving directory exists
+            Utilities.ensureDirExists(checkPointDir)
+            stageCount = 1
             # Next, start stage 1 if we need it; 
             #otherwise just pull in the needed variables.
-            if (not Utilities.dirExists(cacheFileS1)
-                or forceStage1):
-                # get the X,Y velocity, times, and ratio on a per protein basis
-                # each of these is a list. Each element  corresponds to data
-                # for a single protein
-                trackedTimes,trackedFRET,trackedDiffusion = \
-                                            GetTraces.GetTracesMain(f)
-                # get the output dir for the previous path. 
-            else:
-                # the output directory exists; no sense in re-running the analysis.
-                # just use the text output.
-                Utilities.ReportMessage("Skipping Stage1 since [" + 
-                                        cacheFileS1 + 
-                                        "] already exists")
-                trackedTimes, trackedDiffusion,trackedFRET = \
-                                Utilities.loadAll(stage1Folder,fileNamesStage1)
-                # POST: now have valid, trackable diffusion, times, and FRET
-                # Move to stage 2. where we get the unfolding times
-                Utilities.globalIO.setStep("Step2::GetPhysics")
-                if (not Utilities.dirExists(cacheFileS2)
-                    or forceStage2):
-                    unfoldingTimes, diffusionCoeffs,trackedIndices = \
-                            GetPhysics.GetPhysicsMain(trackedTimes
-                                                      ,trackedFRET,
-                                                      trackedDiffusion)
-                else:
-                    Utilities.ReportMessage("Skipping Stage2 since [" +
-                                            cacheFileS2 + 
-                                            "] already exists")
-                    unfoldingTimes, diffusionCoeffs,trackedIndices = \
-                            Utilities.loadAll(stage2Folder,fileNamesStage2)
-                    # XXX fix ths flattening
-            trialTimes.append(unfoldingTimes)
-            trialDiff.append(diffusionCoeffs)
+            # get the X,Y velocity, times, and ratio on a per protein basis
+            # each of these is a list. Each element  corresponds to data
+            # for a single protein
+            # save the raw data as well
+            rawFile = checkPointFilePath + str(stageCount)
+            stageCount += 1
+            traceFilter = GetTraces.GetTraces(f,checkPointFilePath + str(stageCount),rawFile,
+                                              forceStage1)
+            filteredByTrace = traceFilter.filterAndCheckPoint()
+            # get the output dir for the previous path. 
+            # Move to stage 2. where we get the unfolding times
+            stageCount += 1
+            Utilities.globalIO.setStep("Step2::GetPhysics")
+            physFilter = GetPhysics.GetPhysics(filteredByTrace,
+                                               checkPointFilePath + str(stageCount),
+                                               forceStage2)
+            filteredByPhysics = physFilter.filterAndCheckPoint()
+            fileData.append(filteredByPhysics)
         # POST: valid unfolding time and diffusion coefficients.
-        # same the unfolding time and diffusion coefficients across all the trial
+        # same the unfolding time and diffusion coefficients across the trial
         # Move to Stage 3, where we get the residence time distribution
         Utilities.globalIO.setStep("Step3::GetModel")
-        # no longer in any particular file, so save everything in the 'top level'
+        # no longer in any particular file, so save everything in 'top level'
         Utilities.globalIO.setFile("")
-        params,stdev,RSQ = GetModel.GetModelMain(trialTimes,trialDiff,
-                                                 modelsToUse)
+        params,stdev,RSQ = GetModel.GetModelMain(fileData,modelsToUse)
     else:
         # stage 3 files exist. Just need to load the files to be able 
         # to compare...
@@ -143,7 +125,8 @@ for tNum,t in enumerate(trials):
         stdev = []
         RSQ = []
         for num in modelsToUse:
-            thisModelFiles = [Utilities.getModelFile(f,num) for f in fileNamesStage3]
+            thisModelFiles = [Utilities.getModelFile(f,num) 
+                              for f in fileNamesStage3]
             paramsTmp, stdevTmp,RSQTmp = \
                                 Utilities.loadAll(stage3Folder,thisModelFiles)
             params.append(paramsTmp)
@@ -185,7 +168,6 @@ for t in range(numTrials):
     axRSQ.bar(xVals[numVals],RSQ,width=wid,color=mColor,align='center',
               label=mLabel)
     # only the second time, add a third axis
-#axRSQ.set_yscale('log')
 ax.legend(loc='upper left')
 ax.set_ylabel('Tau value (seconds)')
 plt.xlim([-0.5,max(xVals)*1.1])

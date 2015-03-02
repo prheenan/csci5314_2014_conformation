@@ -1,3 +1,5 @@
+# force floating point division. Can still use integer with //
+from __future__ import division
 # use numpy for array operations
 import numpy as np
 # import sys for file and path stuff
@@ -14,6 +16,8 @@ import scipy.cluster.vq as cluster
 from scipy import interpolate
 # use math for isnan and such
 import math
+sys.path.append('../Base')
+import Filter
 
 def convertTimeToIndex(times,frameRate=0.1):
     return np.round(times / frameRate)
@@ -55,7 +59,7 @@ def getDifferentialTime(valuesBefore,valuesAfter):
     # also returns the indices of the proteins which were used.
     numVals = len(valuesBefore)
     indices=  []
-    diffTime = []
+    diffTime = -1. * np.ones(numVals)
     for i in range(numVals):
         first = valuesBefore[i]
         second = valuesAfter[i]
@@ -65,8 +69,9 @@ def getDifferentialTime(valuesBefore,valuesAfter):
             continue
         # POST: non negative, values 'match'
         indices.append(i)
-        # append the proper diff time
-        diffTime.append(second-first)
+        # append the proper residence time.
+        # all others will be -1...
+        diffTime[i] = second-first
     return diffTime,indices
 
 def getDistances(goodFRET,goodTimes):
@@ -103,6 +108,7 @@ def getDistances(goodFRET,goodTimes):
         np.array(indices),np.array(nodeIndices)
 
 
+
 def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     source = 'Step2::GetPhysics'
     util.ReportMessage("Starting",source)
@@ -113,7 +119,8 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     # XXXfill all these in! based on video size
     frameRate = 0.1
     maxNumTimes = 30*10
-    distances,times,definedDistancesIdx,nodeIdx =getDistances(goodFRET,goodTimes)
+    distances,times,definedDistancesIdx,nodeIdx =\
+                                getDistances(goodFRET,goodTimes)
     # get just the 'nodes' with valid valued.
     # flatten the distances to get a notion of the 'all time'
     # distance information. We can use this and kmeans to find a 'folded
@@ -169,19 +176,15 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     unfoldedArr = getMinimumTime(distances,times,
                                  aboveIsUnfolded,False)
 
-    diffTime, definedUnfoldingIdx = getDifferentialTime(foldedArr,unfoldedArr)
+    unfoldingTimes, definedUnfoldingIdx = \
+                        getDifferentialTime(foldedArr,unfoldedArr)
     # create our new diffusion coefficients by first taking the ones with
     # well-defined FRET, then taking the ones with well-defined folding.
     goodIndices = nodeIdx[definedUnfoldingIdx]
     indexArr = [nodeIdx,definedUnfoldingIdx]
-    goodDiff = util.takeSubset(goodDiff,indexArr)
+
+    filterUnfolding = util.takeSubset(unfoldingTimes,indexArr)
     goodTime = util.takeSubset(times,indexArr)
-
-    # POST: we have all the final data we need. Go ahead and save.
-    util.saveAll([goodIndices,goodDiff,diffTime],
-                 [util.IO_indices,util.IO_diff,util.IO_frames],
-                 [util.IO_Stage2Folder])
-
     plotCount +=1
     # plot the FRET distances
     ax = plt.subplot(numPlots,1,plotCount)
@@ -189,7 +192,8 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
                            'FRET Distance histogram',flattenDistances,
                            len(flattenDistances)/100,True,True)
     # plot guiding lines for the two clusters we found
-    normalClusters = plotUtil.normalizeTo(flattenDistances,[belowIsFolded,aboveIsUnfolded])
+    normalClusters = plotUtil.normalizeTo(flattenDistances,
+                                          [belowIsFolded,aboveIsUnfolded])
     foldedNorm = min(normalClusters)
     unfoldedNorm = max(normalClusters)
     lowerNorm = [0,foldedNorm, unfoldedNorm]
@@ -206,12 +210,24 @@ def GetPhysicsMain(goodTimes,goodFRET,goodDiff):
     # plot something like the residence time
     ax = plt.subplot(numPlots,1,plotCount)
     plotUtil.histogramPlot(ax,'Unfolding time distribution','# Proteins',
-                           'Unfolding time (seconds) ',diffTime,
-                           len(diffTime)/100,True,True)
+                           'Unfolding time (seconds) ',filterUnfolding,
+                           len(filterUnfolding)/100,True,True)
 
 
     plotUtil.saveFigure(fig,'FRET_and_ResidenceTimeHistograms')
     # return the good unfolding times and differential coefficients
-    return diffTime,goodDiff,goodIndices
+    return unfoldingTimes,goodIndices
 
-    
+class GetPhysics(Filter.DataFilter):
+    def __init__(self,data,outFile,forced):
+        super(GetPhysics,self).__init__(data,outFile,forced)
+    def getFilterIdx(self):
+        goodTimes,goodFRET,goodDiff = self.get([Filter.prop_time,
+                                                Filter.prop_ratio,
+                                                Filter.prop_diff])
+        residenceTime,goodIndices= \
+                                GetPhysicsMain(goodTimes,goodFRET,goodDiff)
+        # add in the residence times (unfiltered, we will filter later).
+        self.setElement(Filter.prop_resi,residenceTime) 
+        return goodIndices
+        

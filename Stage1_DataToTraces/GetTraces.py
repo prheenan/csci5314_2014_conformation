@@ -1,3 +1,5 @@
+# force floating point division. Can still use integer with //
+from __future__ import division
 #for matrices, use numpy
 import numpy as np
 # for file information, use of 
@@ -5,6 +7,7 @@ import os
 # for adding path / utility functions, use sys
 import sys
 sys.path.append('../Utilities')
+sys.path.append('../Base')
 # import the util file.
 import Utilities as util
 # import the plotting utility file
@@ -17,6 +20,18 @@ import matplotlib.pyplot  as plt
 from scipy import stats
 # import the colormap
 import matplotlib.cm as cm
+# base class!
+sys.path.append('../Base')
+import Filter
+
+from os.path import expanduser
+home = expanduser("~")
+# get the utilties directory (assume it lives in ~/utilities/python)
+# but simple to change
+path= home +"/utilities/python"
+import sys
+sys.path.append(path)
+import GenUtilities as pGenUtil
 
 # create our pattern using the verbose flag for commenting.
     # http://stackoverflow.com/questions/9507173/python-regex-re-compile-match:
@@ -126,7 +141,9 @@ def sqDeltaSum(vals):
 def safePerObjectIndex(listToCheck,i1,i2):
     # return the given data (first index) and value (i2) for each object in the list
     # if there aren't real values, return -1, which we will catch later
-    return [ obj[i1][i2] if len(obj) > i1 and len(obj[i1]) >i2 else -1 for obj in listToCheck]
+    return [ obj[i1][i2] 
+             if len(obj) > i1 and len(obj[i1]) >i2 else -1 
+             for obj in listToCheck]
 
 
 def ProcessData(dataByObject,frameRate):
@@ -145,8 +162,8 @@ def ProcessData(dataByObject,frameRate):
     yIndex = 1
     xVals = safePerObjectIndex(dataByObject,xyIndex,xIndex)
     yVals = safePerObjectIndex(dataByObject,xyIndex,yIndex)
-    MSD = [ 1/(np.arange(1,1+len(x))) * (sqDeltaSum(x) + sqDeltaSum(y))
-            if len(x) > 1 else np.array([0]) for x,y in zip(xVals,yVals) ]
+    MSD = [ 1./(np.arange(1,1+len(x))) * (sqDeltaSum(x) + sqDeltaSum(y))
+            for x,y in zip(xVals,yVals) ]
     velX = getVelocity(xVals,deltaTimes)
     velY = getVelocity(yVals,deltaTimes)
     # channel 1 (FRET donor) is the third
@@ -165,7 +182,7 @@ def ProcessData(dataByObject,frameRate):
     plotUtil.compareHist('Intensity (au)','Protein Count','FRET Intensities'
                          ,maxXAxis,toCompare,
                          ['Donor Channel','Acceptor Channel'])
-    return velX,velY,times,numTimes,fretRatio,MSD
+    return velX,velY,times,numTimes,fretRatio,MSD,channel1,channel2,xVals,yVals
 
 def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
     util.ReportMessage("AnalyzeTraces")
@@ -221,7 +238,7 @@ def AnalyzeTraces(velX,velY,times,numTimes,fretRatio,MSD,frameRate):
     msdVals =  goodMsds[:,0]
     # plot the histogram of MSDs
     ax = fig.add_subplot(numPlots,1,plotCount)
-    numBins = max(msdVals)
+    numBins = np.max(msdVals)
     numProteins = len(msdVals)
     axTmp = plotUtil.histogramPlot(ax,'Diffusion Coeff (pixels^2/second)',
                                    proteinYStr,
@@ -266,20 +283,35 @@ def GetTracesMain(fileName,frameRate=0.1):
     else:
         # POST: tmpFile is a valid filename
         dataByObjects, dataByGroups = GetListOfObjectData(f)
-        velX,velY,times,numTimes,fretRatio,MSD = \
+        velX,velY,times,numTimes,fretRatio,MSD,channel1,channel2,X,Y = \
                                         ProcessData(dataByObjects,frameRate)
+        
+        rawData = Filter.CheckpointData(times,channel1,channel2,fretRatio,X,Y,
+                                        velX,velY,MSD)
+
         diffCoeffs,bestIndices = \
                                  AnalyzeTraces(velX,velY,times,numTimes,
                                                fretRatio,MSD,frameRate)
-            
-        # XXX only works one at a time for now
-        atGoodIndices =\
-                util.saveAllAtIndices([times,numTimes,fretRatio,MSD,diffCoeffs],
-                        [util.IO_frames,
-                         util.IO_numFrames,
-                         util.IO_fret,
-                         util.IO_msd,
-                         util.IO_diff],
-                        [util.IO_Stage1Folder],bestIndices)
-        goodTimes , ignore, goodFRET , ignore,goodDiff = atGoodIndices
-        return goodTimes,goodFRET,goodDiff
+        return rawData,diffCoeffs,bestIndices
+
+class GetTraces(Filter.DataFilter):
+    def __init__(self,inFile,outFile,dataFile,frameRate=0.1):
+        super(GetTraces,self).__init__(None,outFile)
+        self._inputFile = inFile
+        self._getRawData(pGenUtil.ensureEnds(dataFile,'.npz'))
+    def getFilterIdx(self):
+        # must call getRawDatabefore this (ie: must have called constructoor)
+        return self.bestIndices 
+    def _dataRead(self,fileName):
+        rawData,diffCoeff,bestIndices= GetTracesMain(self._inputFile)
+        # set the data and the diffusion coefficients (new)
+        # need to set in this order
+        self.setData(rawData)
+        self.setElement(Filter.prop_diff,diffCoeff)
+        self.bestIndices = bestIndices
+        Filter.DataFilter.checkPoint(rawData,fileName)
+    def _getRawData(self,fileName):
+        Filter.DataFilter.callIfNoFile(self._dataRead,fileName)
+        
+        
+
