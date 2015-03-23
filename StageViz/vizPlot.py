@@ -72,7 +72,7 @@ def getAllStages(fileDict,conditionLabel,trialLabel,mWorking,condIdx,trialIdx):
                                 format(condIdx,trialIdx,k),mWorking,False)
         # get the x and y sparse matrices
         xSparse,ySparse,c1,c2 = \
-                    cPoint.getCheckpoint(mFile,vizIOSparse,False,stageFile)
+                    cPoint.getCheckpoint(mFile,vizIOSparse,True,stageFile)
         X.append(xSparse)
         Y.append(ySparse)
         fretC1.append(c1)

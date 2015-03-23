@@ -67,6 +67,8 @@ def getSparseData(data):
     flatC1 = normalize(np.concatenate(data['FRET_C1']))
     flatC2 = normalize(np.concatenate(data['FRET_C2']))
     # get the CSR matrix
+    print(nObjs)
+    print(nTimes)
     fretC1 = csr_matrix((flatC1,timeIdx,indptr),shape=(nObjs,nTimes))
     fretC2 = csr_matrix((flatC2,timeIdx,indptr),shape=(nObjs,nTimes))
     print(fretC1.shape)
