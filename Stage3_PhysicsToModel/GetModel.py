@@ -23,9 +23,6 @@ import matplotlib.pyplot as plt
 # import the data filtering stuff
 import Filter
 
-
-
-
 def logfit(modelNumber,timeRtd,CRTD):
     # for the logarithmic fit, use the log of the 
     # CRTD, then scale th resulting probabilities.
@@ -116,6 +113,7 @@ def GetModelMain(allData,modelNums,frameRate = 0.1,plotRTD=False):
     # get the 'overall' parameters for the time grid
     concatData = Filter.DataFilter.concatenate(allData)
     residenceTimes = concatData.getSingleVal(Filter.prop_resi)
+    print(residenceTimes)
     ravelTimes = residenceTimes.flatten()
     print(ravelTimes.shape)
     numProteins = len(ravelTimes)
