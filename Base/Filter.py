@@ -75,7 +75,7 @@ class CheckpointData:
     # lists are pass be reference in python, so we can just index into the
     # property list. Assumes the index is OK
         numProps = len(self._propList)
-        keys = self._propList.keys()
+        keys = list(self._propList.keys())
         for i in range(numProps):
             thisKey = keys[i]
             if (self._propList[thisKey] is not None):
@@ -165,7 +165,7 @@ class DataFilter:
     def concatenate(cls,dataObjects):
         # dataobjects is a list of objects with the same not-non propteries
         # name of the properties
-        properties = dataObjects[0].getData().keys()
+        properties = list(dataObjects[0].getData().keys())
         # get the last index, then take the max accross all videos
         # allows us to maintain unique indices later...
         maxIdx = np.max([ dataObj[prob_idx][-1] 
