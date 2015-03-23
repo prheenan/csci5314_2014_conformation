@@ -75,7 +75,7 @@ def takeSubset(original,indices):
 def ReportError(isFatal=False, description="None Given",source="-1"):
     ReportMessage("Error [" + description +"]",source)
     if (isFatal):
-        raise StandardError
+        raise
 
 def ReportMessage(description="None Given",source="-1"):
     if (source == "-1"):
