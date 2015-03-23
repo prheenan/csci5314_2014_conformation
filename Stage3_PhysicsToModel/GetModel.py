@@ -114,7 +114,7 @@ def GetModelMain(allData,modelNums,frameRate = 0.1,plotRTD=False):
     concatData = Filter.DataFilter.concatenate(allData)
     residenceTimes = concatData.getSingleVal(Filter.prop_resi)
     print(residenceTimes)
-    ravelTimes = residenceTimes.flatten()
+    ravelTimes = np.concatenate(residenceTimes)
     print(ravelTimes.shape)
     numProteins = len(ravelTimes)
     sortedRavelTimes = np.sort(ravelTimes)
