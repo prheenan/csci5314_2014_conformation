@@ -99,8 +99,8 @@ def getSanitaryPath(path,includeSep = True):
 def ensureDirExists(directory):
     # make the directory if it isn't there!
     safeDir =getSanitaryPath(directory)
-    if not dirExists(directory):
-        os.makedirs(directory)
+    if not dirExists(safeDir):
+        os.makedirs(safeDir)
 
 def ensurePathExists(globalOutput,subPaths):
     ensureDirExists(globalOutput)
