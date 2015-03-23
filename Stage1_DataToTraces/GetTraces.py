@@ -109,7 +109,7 @@ def GetListOfObjectData(f):
     else:
         util.ReportError(True,
                          ("Could not match file [" + f +"] to regex"),
-                         mSource)
+                         "GetTraces::GetListOfObjectData")
 
     # POST: at least one macth
     # XXX check that lengths are all the same, proper numberf of groups
