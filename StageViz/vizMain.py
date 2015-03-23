@@ -28,6 +28,6 @@ for i,key in enumerate(fileDict.keys()):
         # for this condition and trial, get the directories and all the 
         # data, then save
         trialDir,allStageDir =  getDirs(mOut,key,keyV,j)
-        X,Y = getAllStages(fileDict,key,keyV,mWorking,i,j)
-        saveAsSubplot(X,Y,allStageDir)
+        X,Y,c1,c2 = getAllStages(fileDict,key,keyV,mWorking,i,j)
+        saveAsSubplot(X,Y,c1,c2,allStageDir)
 

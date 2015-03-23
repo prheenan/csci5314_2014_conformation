@@ -20,7 +20,6 @@ def vizFormatIOFile(fileName,outDir,numpy):
         base += ".pkl"
     return base
 
-
 def getCheckpointFileDict(dataDir):
     # file dict has a key for each surface condition (e.g. 5x_PBS_25C_) and 
     # within that condition, a key for each trial (e.g. 5x_PBS_25C_200ms01)
@@ -64,13 +63,14 @@ def getSparseData(data):
     ySparse = csr_matrix((Y,timeIdx,indptr),shape=(nObjs,nTimes))
     # each row is an object, each columni is a time.
     # XXX add in others..
-    #fretC1 = data['FRET_C1']
-    #fretC2 = data['FRET_C2']
-    #velY = data['velY']
-    #velX = data['velX']
-    return xSparse,ySparse
-
-
+    normalize = lambda x: (x-np.min(x))/(np.max(x)-np.min(x))
+    flatC1 = normalize(np.concatenate(data['FRET_C1']))
+    flatC2 = normalize(np.concatenate(data['FRET_C2']))
+    # get the CSR matrix
+    fretC1 = csr_matrix((flatC1,timeIdx,indptr),shape=(nObjs,nTimes))
+    fretC2 = csr_matrix((flatC2,timeIdx,indptr),shape=(nObjs,nTimes))
+    print(fretC1.shape)
+    return xSparse,ySparse,fretC1,fretC2
 
 def getDirs(mOut,condLabel,trial,trialNum):
     trialLabel = condLabel + '_trial{:d}/'.format(trialNum)

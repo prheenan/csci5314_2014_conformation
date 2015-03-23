@@ -86,8 +86,19 @@ def ReportMessage(description="None Given",source="-1"):
 def dirExists(directory):
     return os.path.exists(directory)
 
+
+def getSanitaryPath(path,includeSep = True):
+    # return the sanitized path plus an os-dependent separator,maybe
+    toRet =os.path.normpath(path)
+    if (includeSep):
+        return toRet + os.sep
+    else:
+        # dont include the separator
+        return toRet
+
 def ensureDirExists(directory):
     # make the directory if it isn't there!
+    safeDir =getSanitaryPath(directory)
     if not dirExists(directory):
         os.makedirs(directory)
 
@@ -118,7 +129,7 @@ def humanReadableSave(listToSave,fileName,header):
         except (csv.Error) as e:
             # must not be a list
             writeObj.writerows([listToSave])
-                            
+
 
 
 def saveAll(matricesToSave,labels,thisPath,saveCSVForHumans=True):
