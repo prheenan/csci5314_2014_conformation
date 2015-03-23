@@ -113,9 +113,7 @@ def GetModelMain(allData,modelNums,frameRate = 0.1,plotRTD=False):
     # get the 'overall' parameters for the time grid
     concatData = Filter.DataFilter.concatenate(allData)
     residenceTimes = concatData.getSingleVal(Filter.prop_resi)
-    print(residenceTimes)
     ravelTimes = np.concatenate(residenceTimes)
-    print(ravelTimes.shape)
     numProteins = len(ravelTimes)
     sortedRavelTimes = np.sort(ravelTimes)
     diffTimes = np.gradient(np.unique(sortedRavelTimes))
