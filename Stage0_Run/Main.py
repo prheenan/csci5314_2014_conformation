@@ -99,7 +99,8 @@ for tNum,t in enumerate(trials):
             # save the raw data as well
             rawFile = checkPointFilePath + str(stageCount)
             stageCount += 1
-            traceFilter = GetTraces.GetTraces(f,checkPointFilePath + str(stageCount),rawFile,
+            traceFilter = GetTraces.GetTraces(f,checkPointFilePath + 
+                                              str(stageCount),rawFile,
                                               forceStage1)
             filteredByTrace = traceFilter.filterAndCheckPoint()
             # get the output dir for the previous path. 
@@ -107,7 +108,8 @@ for tNum,t in enumerate(trials):
             stageCount += 1
             Utilities.globalIO.setStep("Step2::GetPhysics")
             physFilter = GetPhysics.GetPhysics(filteredByTrace,
-                                               checkPointFilePath + str(stageCount),
+                                               checkPointFilePath +
+                                               str(stageCount),
                                                forceStage2)
             filteredByPhysics = physFilter.filterAndCheckPoint()
             fileData.append(filteredByPhysics)

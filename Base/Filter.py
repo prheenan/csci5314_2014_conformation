@@ -152,7 +152,7 @@ class DataFilter:
     @classmethod 
     def checkPoint(cls,data,output):
         toSave = dict()
-        for key,val in data.getData().iteritems():
+        for key,val in data.getData().items():
             if (val is not None):
                 toSave[key] = val
             else:
