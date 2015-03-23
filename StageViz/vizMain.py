@@ -109,7 +109,7 @@ def saveAsSubplot(XByStages,YByStages,outputDir):
             plt.subplot(1,numStages,i+1)
             timeIdx = min(t,nTimes[i])
             plotSingle(XByStages[i],YByStages[i],maxX,maxY,timeIdx)
-        pUtil.saveFigure(fig,outputDir + "t{:05d}".format(t),
+        pUtil.saveFigure(fig,outputDir + "t{:05d}".format(timeIdx),
                              overrideIO=True)
 
 def vizIOSparse(inputFile):
@@ -136,8 +136,8 @@ for i,key in enumerate(fileDict.keys()):
             stageDir = trialDir + "Stage{:d}/".format(k)
             gUtil.ensureDirExists(stageDir)
             # get the output file as a pickle (False, not numpy)
-            mFile = vizFormatIOFile("IO_condition{:d}_trial{:d}_stage{:d}".format(i,j,k),
-                                    mWorking,False)
+            mFile = vizFormatIOFile("IO_condition{:d}_trial{:d}_stage{:d}".
+                                    format(i,j,k),mWorking,False)
             # get the x and y sparse matrices
             xSparse,ySparse = \
                 cPoint.getCheckpoint(mFile,vizIOSparse,False,stageFile)
