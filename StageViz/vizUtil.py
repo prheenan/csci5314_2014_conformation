@@ -44,8 +44,8 @@ def getCheckpointFileDict(dataDir):
     return fileDict
 
 def getSparseData(data):
-    times = data['times']
-    objIdx = data['idx']
+    times = data["times"]
+    objIdx = data["idx"]
     flattened = np.concatenate(times)
     uniqueTimes = np.unique(flattened)
     frameTime = np.min(np.diff(uniqueTimes))
@@ -57,27 +57,23 @@ def getSparseData(data):
     # get the zero-indexed time (e.g., 0.1 --> 0 if 0.1 is the frame time)
     # XXX fix min time bug...
     timeIdx = map( lambda x: int((x-frameTime)/frameTime), flattened)
-    X = np.concatenate(data['X'])
-    Y = np.concatenate(data['Y'])
+    X = np.concatenate(data["X"])
+    Y = np.concatenate(data["Y"])
     xSparse = csr_matrix((X,timeIdx,indptr),shape=(nObjs,nTimes))
     ySparse = csr_matrix((Y,timeIdx,indptr),shape=(nObjs,nTimes))
     # each row is an object, each columni is a time.
     # XXX add in others..
     normalize = lambda x: (x-np.min(x))/(np.max(x)-np.min(x))
-    flatC1 = normalize(np.concatenate(data['FRET_C1']))
-    flatC2 = normalize(np.concatenate(data['FRET_C2']))
+    flatC1 = normalize(np.concatenate(data["FRET_C1"]))
+    flatC2 = normalize(np.concatenate(data["FRET_C2"]))
     # get the CSR matrix
-    print(nObjs)
-    print(nTimes)
     fretC1 = csr_matrix((flatC1,timeIdx,indptr),shape=(nObjs,nTimes))
     fretC2 = csr_matrix((flatC2,timeIdx,indptr),shape=(nObjs,nTimes))
-    print(fretC1.shape)
     return xSparse,ySparse,fretC1,fretC2
 
 def getDirs(mOut,condLabel,trial,trialNum):
     trialLabel = condLabel + '_trial{:d}/'.format(trialNum)
     trialDir = mOut + trialLabel
     allStageDir = trialDir + "allStages/"
-    gUtil.ensureDirExists(trialLabel)
     gUtil.ensureDirExists(allStageDir)
     return trialLabel,allStageDir
