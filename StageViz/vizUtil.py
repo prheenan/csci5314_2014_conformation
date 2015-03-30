@@ -32,6 +32,9 @@ def getCheckpointFileDict(dataDir):
         if (os.path.isdir(fullPath)):
             # found a directory in this trial
             for trialLabel in os.listdir(fullPath):
+                if (conditionLabel not in trialLabel):
+                    # then this must not be an actual trial
+                    continue
                 pathToStages = fullPath + trialLabel +  checkDir
                 files = []
                 for fileName in stageNames:
