@@ -20,13 +20,13 @@ defOutput=${3:-"/lustre/janus_scratch/pahe3165/Output-csci7000/"}
 workingDir=`pwd`
 # PRE:
 # load the latest anaconda for python 2.0
-#module load python/anaconda-2.1.0 
+module load python/anaconda-2.1.0 
 
 # POST: all needed modules are loaded
 cd $workingDir
 if [ "$reRunData" = true ]; then
     cd ./Stage0_Run
-    python Main.py #--inPath ${defInput} --outPath ${defOutput}
+    python Main.py --inPath ${defInput} --outPath ${defOutput}
 fi
 # POST: we have should data, assuming the user didn't incorrectly specify reRun
 cd ${workingDir}
