@@ -31,7 +31,7 @@ fi
 # POST: we have should data, assuming the user didn't incorrectly specify reRun
 cd ${workingDir}
 cd ./StageViz
-set -x
-python vizMain.py --inPath $defInput --outPath "${defOutput}viz/vizOut/" \
-    --cachePath "${defOutput}viz/vizTmp/"
+args="--inPath $defInput --outPath ${defOutput}viz/vizOut/ --cachePath ${defOutput}viz/vizTmp/"
+echo $args
+python vizMain.py $args
 
