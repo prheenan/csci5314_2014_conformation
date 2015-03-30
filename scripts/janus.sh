@@ -32,5 +32,6 @@ fi
 cd ${workingDir}
 cd ./StageViz
 set -x
-python vizMain.py $defInput $defOutput
+python vizMain.py -inPath $defInput --outPath "${defOutput}viz/vizOut/" \
+    --cachePath "${defaultOut}viz/vizTmp/"
 
