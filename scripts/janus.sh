@@ -30,6 +30,7 @@ if [ "$reRunData" = true ]; then
 fi
 # POST: we have should data, assuming the user didn't incorrectly specify reRun
 cd ${workingDir}
-cd ./stageViz
-python vizMain.py
+cd ./StageViz
+set -x
+python vizMain.py $defInput $defOutput
 
