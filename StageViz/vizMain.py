@@ -13,35 +13,54 @@ from vizUtil import getCheckpointFileDict,getDirs
 from vizPlot import saveAsSubplot,getAllStages
 
 import subprocess
-dataDir = "../output/"
-mWorking = "./vizTmp/"
-mOut = "./vizOut/"
-# next two must match, for the automatic video encoding to work
-vizFileFormat =  "t{:05d}"
-ffmpegFormat = "t%05d"
-fps = 10 # frames per second, should match video
-vizExt = ".png"
-gUtil.ensureDirExists(mOut)
-gUtil.ensureDirExists(mWorking)
-# get all the files. returns a dictionary of dictionaries.
-# each key in the outer (first) dictionary is a condition
-# each key in the innter (second) dictionary is a trial for that condition
-fileDict = getCheckpointFileDict(dataDir)
+import argparse
 
-# loop through each condition and trial
-for i,key in enumerate(fileDict.keys()):
-    for j,keyV in enumerate(fileDict[key].keys()):
+def parseCmdLine():
+    # get the input/output directories
+    parser = argparse.ArgumentParser(description='Protein Visualizatio args')
+    parser.add_argument('--inPath', type=str, default="../output/",
+                        help="Folder where formatted .dat file reside")
+    parser.add_argument('--outPath', type=str, default="./vizOut/",
+                        help="Default output directory (base)")
+    parser.add_argument('--cachePath', type=str, default="./vizTmp/",
+                        help="Default cache output directory (base)")
+    args = parser.parse_args()
+    dataDir = args.inPath
+    mWorking = args.cachePath
+    mOut = args.outPath
+    return dataDir,mWorking,mOut
+
+
+def saveSingleTrial(mWorking,mOut,condition,trial,trialNum,fps=10,
+                    vizFileFormat="t{:05d}",ffmpegFormat = "t%05d",
+                    vizExt=".png"):
         # for this condition and trial, get the directories and all the 
-        # data, then save
-        trialDir,allStageDir =  getDirs(mOut,key,keyV,j)
-        #X,Y,c1,c2 = getAllStages(fileDict,key,keyV,mWorking,i,j)
-        command = 'ffmpeg'
-        # format the ffmpeg arguments as we want them
-        args = ('-i {:s} -c:v libx264 -r {:d} -y -pix_fmt yuv420p '+
-                '{:s}1_movie_{:s}.mov').\
-            format(allStageDir+ffmpegFormat+vizExt,fps,allStageDir,key)
-        print(args)
-        #saveAsSubplot(X,Y,c1,c2,allStageDir,vizFileFormat)
-        # POST: all videos saved for this trial. make the movie
-        ret = os.system(command + ' ' + args)
-        
+    # data, then save
+    trialDir,allStageDir =  getDirs(mOut,condition,trial,trialNum)
+    X,Y,c1,c2 = getAllStages(fileDict,condition,trial,mWorking,i,j)
+    command = 'ffmpeg'
+    # format the ffmpeg arguments as we want them
+    args = ('-i {:s} -c:v libx264 -r {:d} -y -pix_fmt yuv420p '+
+            '{:s}1_movie_{:s}_trial_{:d}.mov').\
+        format(allStageDir+ffmpegFormat+vizExt,fps,allStageDir,
+               condition,trialNum)
+    saveAsSubplot(X,Y,c1,c2,allStageDir,vizFileFormat)
+    # POST: all videos saved for this trial. make the movie
+    #ret = os.system(command + ' ' + args)
+
+
+if __name__ == '__main__':
+    inDir,workDir,outDir = parseCmdLine()
+    # next two must match, for the automatic video encoding to work
+    gUtil.ensureDirExists(outDir)
+    gUtil.ensureDirExists(workDir)
+    # get all the files. returns a dictionary of dictionaries.
+    # each key in the outer (first) dictionary is a condition
+    # each key in the innter (second) dictionary is a trial for that condition
+    fileDict = getCheckpointFileDict(inDir)
+    # loop through each condition and trial
+    for i,condition in enumerate(fileDict.keys()):
+        for j,trial in enumerate(fileDict[condition].keys()):
+            saveSingleTrial(workDir,outDir,condition,trial,j)
+
+

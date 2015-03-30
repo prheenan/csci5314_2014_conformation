@@ -5,8 +5,6 @@ import sys
 # more or less a way of 'C-style' importing,  to be able to run wherever
 # XXX TODO : should fix this out here
 import argparse
-
-
 foldersToImport = ['Stage0_Run','Stage1_DataToTraces',
                    'Stage2_TracesToPhyscs','Stage3_PhysicsToModel',
                    'Testing','Utilities','Base']
@@ -58,7 +56,6 @@ def plotStats(numBars,numTrials,trialStats):
     plt.xlim([-0.5,max(xVals)*1.1])
     plt.xticks(tickLabelX, statsLabel)
     pltUtil.saveFigure(f,"Comparison")
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Protein Data Analysis Args')
