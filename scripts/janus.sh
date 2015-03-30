@@ -20,7 +20,7 @@ defOutput=${3:-"/lustre/janus_scratch/pahe3165/Output-csci7000/"}
 workingDir=`pwd`
 # PRE:
 # load the latest anaconda for python 2.0
-#module load python/anaconda-2.1.0 
+module load python/anaconda-2.1.0 
 
 # POST: all needed modules are loaded
 cd $workingDir
