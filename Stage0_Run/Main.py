@@ -128,6 +128,7 @@ if __name__ == '__main__':
                 outputDir = Utilities.globalIO.getOutputDir([],"")
                 checkPointDir = outputDir + Utilities.CheckpointDir
                 checkPointFilePath = checkPointDir + 'Stage_'
+                print(checkpointDir)
                 # ensure the saving directory exists
                 Utilities.ensureDirExists(checkPointDir)
                 stageCount = 1
