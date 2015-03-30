@@ -13,7 +13,7 @@
 # set -o: single error causes full pipeline failure.
 set -euo pipefail
 IFS=$'\n\t'
-reRunData=${1:-true}
+reRunData=${1:-false}
 defInput=${2:-"/lustre/janus_scratch/pahe3165/Data-csci7000/"}
 defOutput=${3:-"/lustre/janus_scratch/pahe3165/Output-csci7000/"}
 
