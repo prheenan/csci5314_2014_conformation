@@ -42,7 +42,8 @@ def plotSingle(X,Y,c1ByStages,c2ByStages,maxX,maxY,timeIdx,cmap,nColors):
     plt.ylim([0,maxY])
 
 
-def saveAsSubplot(XByStages,YByStages,c1ByStages,c2ByStages,outputDir):
+def saveAsSubplot(XByStages,YByStages,c1ByStages,c2ByStages,outputDir,
+                  fileFormat):
     maxX = 0
     maxY = 0
     # number of times given by columns
@@ -74,8 +75,6 @@ def saveAsSubplot(XByStages,YByStages,c1ByStages,c2ByStages,outputDir):
                    aspect='auto',filterrad=4,origin='lower')
         hideAxis()
         counter += 1
-        # vertically oriented colorbar
-
         for i in range(numStages):
             plt.subplot(1,subPlots,counter)
             timeIdx = min(t,nTimes[i])
@@ -84,12 +83,13 @@ def saveAsSubplot(XByStages,YByStages,c1ByStages,c2ByStages,outputDir):
                        c2ByStages[i],maxX,maxY,timeIdx,cmap,nColors)
             counter += 1
         colorAx = plt.subplot(1,subPlots,subPlots)
-        cbar = fig.colorbar(cax,ax=colorAx, ticks=[0, 1], 
-                            orientation='vertical',use_gridspec=True)
-        cbar.ax.set_xticklabels(['Unfolded', 'Folded'])# horizontal colorbar
+        ### XXX TODO: add in colorbar based on fluorescence
+#        cbar = fig.colorbar(cax,ax=colorAx, ticks=[0, 1], 
+#                            orientation='vertical',use_gridspec=True)
+#        cbar.ax.set_xticklabels(['Unfolded', 'Folded'])# horizontal colorbar
 
-        pUtil.saveFigure(fig,outputDir + "t{:05d}".format(t),
-                               overrideIO=True)
+        pUtil.saveFigure(fig,outputDir +fileFormat.format(t),
+                         overrideIO=True)
 
 
 def vizIOSparse(inputFile):
