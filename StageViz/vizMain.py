@@ -50,7 +50,6 @@ def saveSingleTrial(mWorking,mOut,condition,trial,trialNum,fps=10,
 
 
 if __name__ == '__main__':
-    print("in main!")
     inDir,workDir,outDir = parseCmdLine()
     # next two must match, for the automatic video encoding to work
     gUtil.ensureDirExists(outDir)
@@ -59,6 +58,8 @@ if __name__ == '__main__':
     # each key in the outer (first) dictionary is a condition
     # each key in the innter (second) dictionary is a trial for that condition
     fileDict = getCheckpointFileDict(inDir)
+    print(fileDict)
+    print(inDir)
     # loop through each condition and trial
     for i,condition in enumerate(fileDict.keys()):
         for j,trial in enumerate(fileDict[condition].keys()):
