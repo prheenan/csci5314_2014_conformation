@@ -31,6 +31,7 @@ fi
 # POST: we have should data, assuming the user didn't incorrectly specify reRun
 cd ${workingDir}
 cd ./StageViz
-args="--inPath $defInput --outPath ${defOutput}viz/vizOut/ --cachePath ${defOutput}viz/vizTmp/"
+# visualization uses the *output* from the analysis
+args="--inPath $defOutput --outPath ${defOutput}viz/vizOut/ --cachePath ${defOutput}viz/vizTmp/"
 eval "python vizMain.py $args"
 
