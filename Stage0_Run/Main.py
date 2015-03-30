@@ -70,7 +70,6 @@ if __name__ == '__main__':
     # XXX below lines test this functioon
     testDir=args.inPath
     Utilities.globalIO.globalOutput = args.outPath
-    print(Utilities.globalIO.globalOutput)
     #  get a list of files in the test directory
     # sort alphabetically
     filesFound=sorted(os.listdir(testDir))
@@ -128,7 +127,6 @@ if __name__ == '__main__':
                 outputDir = Utilities.globalIO.getOutputDir([],"")
                 checkPointDir = outputDir + Utilities.CheckpointDir
                 checkPointFilePath = checkPointDir + 'Stage_'
-                print(checkPointDir)
                 # ensure the saving directory exists
                 Utilities.ensureDirExists(checkPointDir)
                 stageCount = 1

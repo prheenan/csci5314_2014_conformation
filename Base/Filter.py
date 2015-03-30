@@ -125,8 +125,6 @@ class DataFilter:
             return toCall(fileN)
     def filter(self):
         force = self._force
-        print(self._filePath)
-        print(force)
         if (pGenUtil.isfile(self._filePath) and not force):
             # return a new checkpoint object from the data
             data = np.load(self._filePath)
