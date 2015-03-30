@@ -51,6 +51,7 @@ class outputHelper:
         sepPath =np.concatenate(tmpPath)
         path = ensurePathExists(outputHelper.globalOutput,
                                 sepPath)
+        print("util: {:s}".format(self.globalOutput))
         return path+fileName
 
 globalIO = outputHelper()
