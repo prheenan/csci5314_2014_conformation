@@ -49,9 +49,8 @@ class outputHelper:
             fileName = self.st
         tmpPath = [ [self.trial, self.fil],path[:]]
         sepPath =np.concatenate(tmpPath)
-        path = ensurePathExists(outputHelper.globalOutput,
+        path = ensurePathExists(self.globalOutput,
                                 sepPath)
-        print("util: {:s}".format(self.globalOutput))
         return path+fileName
 
 globalIO = outputHelper()
