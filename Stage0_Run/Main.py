@@ -70,6 +70,7 @@ if __name__ == '__main__':
     # XXX below lines test this functioon
     testDir=args.inPath
     Utilities.globalIO.globalOutput = args.outPath
+    print(Utilities.globalIO.globalOutput)
     #  get a list of files in the test directory
     # sort alphabetically
     filesFound=sorted(os.listdir(testDir))
@@ -82,16 +83,14 @@ if __name__ == '__main__':
     # each tau value (everything except RSQ) has an uncertainty
     numBars = len(statsLabel)
     numParams = (numBars-1)*2+1
-
     trialStats = np.zeros((numTrials,numParams))
     # mean will just have error bars...
-
     fileNamesStage3 = [Utilities.IO_model,Utilities.IO_model_stdevs,
                        Utilities.IO_model_rsq]
     # can 'force' a re-calulation of the data
     forceStage1 = False
     forceStage2 = False
-    forceStage3 = True
+    forceStage3 = False
     # the numbers in the modeling file, determining which models we will use..
     modelsToUse = [4]
     # look for 'cached' files, by previous stages, speeding up everything a lot.
