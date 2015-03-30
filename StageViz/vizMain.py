@@ -50,6 +50,7 @@ def saveSingleTrial(mWorking,mOut,condition,trial,trialNum,fps=10,
 
 
 if __name__ == '__main__':
+    print("in main!")
     inDir,workDir,outDir = parseCmdLine()
     # next two must match, for the automatic video encoding to work
     gUtil.ensureDirExists(outDir)
