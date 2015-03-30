@@ -17,7 +17,7 @@ reRunData=${1:-true}
 defInput=${2:-"/lustre/janus_scratch/pahe3165/Data-csci7000/"}
 defOutput=${3:-"/lustre/janus_scratch/pahe3165/Output-csci7000/"}
 
-workingDir='pwd'
+workingDir=`pwd`
 # PRE:
 # load the latest anaconda for python 2.0
 module load python/anaconda-2.1.0 
