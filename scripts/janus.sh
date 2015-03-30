@@ -33,5 +33,5 @@ cd ${workingDir}
 cd ./StageViz
 args="--inPath $defInput --outPath ${defOutput}viz/vizOut/ --cachePath ${defOutput}viz/vizTmp/"
 echo $args
-python vizMain.py $args
+python vizMain.py "$args"
 
