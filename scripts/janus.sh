@@ -17,4 +17,6 @@
 #SBATCH -o %j.out
 # also can have stuff for CPUs
 
+# add "~/bin" to the path
+PATH=$PATH:$HOME/bin
 bash ./scripts/_runScript.sh
