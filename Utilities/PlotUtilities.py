@@ -102,22 +102,6 @@ def secondAxis(ax,label,limits,secondY =True,yColor="Black"):
     lab.set_color(yColor)
     return ax2
 
-def saveFigure(figure,fileName,overrideIO=False,close=True):
-    # source : where to save the output iunder the output folder
-    # filename: what to save the file as. automagically saved as high res pdf
-    # override IO: if true, ignore any path infomation in the file name stuff.
-    # close: if true, close the figure after saving.
-    step = util.globalIO.st
-    if (overrideIO):
-        fullPath = fileName
-    else:
-        fullPath = util.globalIO.getOutputDir([step],fileName)
-    plt.tight_layout(False)
-    formatStr = "png"
-    figure.savefig(fullPath + '.' + formatStr,format=formatStr, 
-                   dpi=figure.get_dpi())
-    if (close):
-        plt.close(figure)
 
 def pFigure(ySize=10,xSize=8,dpiArg=100):
     return  plt.figure(figsize=(ySize,xSize),dpi=dpiArg)
@@ -177,3 +161,32 @@ def comparisonPlot(xStr,yStr,titleStr,xLimit,rawValues,indices,
     # call compare hist with the 'subset' we want
     compareHist(xStr,yStr,titleStr,xLimit,toCompare,compLabel)
         
+
+
+
+def savefig(figure,fileName,close=True,tight=True):
+    # source : where to save the output iunder the output folder
+    # filename: what to save the file as. automagically saved as high res pdf
+    # override IO: if true, ignore any path infomation in the file name stuff.
+    # close: if true, close the figure after saving.
+    if (tight):
+        plt.tight_layout(True)
+    formatStr = "png"
+    figure.savefig(fileName + '.' + formatStr,format=formatStr,
+                   dpi=figure.get_dpi())
+    if (close):
+        plt.close(figure)
+
+def figure(xSize=10,ySize=8,dpi=100):
+    return  plt.figure(figsize=(xSize,ySize),dpi=dpi)
+
+def getNStr(n,space = " "):
+    return space + "n={:d}".format(n)
+
+# legacy API. plan is now to mimic matplotlib
+def colorCyc(num,cmap = plt.cm.winter):
+    cmap(num,cmap)
+def pFigure(xSize=10,ySize=8,dpi=100):
+    return figure(xSize,ySize,dpi)
+def saveFigure(figure,fileName,close=True):
+    savefig(figure,fileName,close)

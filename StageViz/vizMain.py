@@ -31,6 +31,10 @@ def parseCmdLine():
     mOut = args.outPath
     return dataDir,mWorking,mOut
 
+def generateMovie(args):
+    command = 'ffmpeg'
+    return os.system(command + ' ' + args)
+
 def saveSingleTrial(mWorking,mOut,condition,condNum,trial,trialNum,fps=10,
                     vizFileFormat="t{:05d}",ffmpegFormat = "t%05d",
                     vizExt=".png"):
@@ -38,15 +42,14 @@ def saveSingleTrial(mWorking,mOut,condition,condNum,trial,trialNum,fps=10,
     # data, then save
     trialDir,allStageDir =  getDirs(mOut,condition,trial,trialNum)
     X,Y,c1,c2 = getAllStages(fileDict,condition,trial,mWorking,condNum,trialNum)
-    command = 'ffmpeg'
     # format the ffmpeg arguments as we want them
-    args = ('-i {:s} -c:v libx264 -r {:d} -y -pix_fmt yuv420p '+
-            '{:s}1_movie_{:s}_trial_{:d}.mov').\
+    argStr = ('-i {:s} -c:v libx264 -r {:d} -y -pix_fmt yuv420p '+
+              '{:s}1_movie_{:s}_trial_{:d}.mov').\
         format(allStageDir+ffmpegFormat+vizExt,fps,allStageDir,
                condition,trialNum)
     saveAsSubplot(X,Y,c1,c2,allStageDir,vizFileFormat)
     # POST: all videos saved for this trial. make the movie
-    #ret = os.system(command + ' ' + args)
+    generateMovie(argStr)
 
 def saveConditions(condition,condNum,conditionKeys,workDir,outDir):
     for j,trial in enumerate(conditionKeys):
@@ -66,9 +69,10 @@ if __name__ == '__main__':
 
     processes= []
     for i,condition in enumerate(conditionArr):
-        p = (Process(target=saveConditions, 
-                     args=(condition,i,fileDict[condition].keys(),
-                           workDir,outDir)))
+        func = saveConditions
+        funcArgs = (condition,i,fileDict[condition].keys(),workDir,outDir)
+#        func(*funcArgs)
+        p = (Process(target=func, args=funcArgs))
         processes.append(p)
         p.start()
     # wait until all processes are done...

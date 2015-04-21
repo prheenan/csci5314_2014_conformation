@@ -47,6 +47,9 @@ def saveAsSubplot(XByStages,YByStages,c1ByStages,c2ByStages,outputDir,
     maxX = 0
     maxY = 0
     # number of times given by columns
+    if (len(XByStages) == 0):
+        print("For {:s}, didn't find any files...".format(outputDir))
+        return
     nTimes = [ X.shape[1]-1 for X in XByStages]
     maxTimes = np.max(nTimes)
     numStages = len(XByStages)
@@ -83,16 +86,17 @@ def saveAsSubplot(XByStages,YByStages,c1ByStages,c2ByStages,outputDir,
                                c2ByStages[i],maxX,maxY,timeIdx,cmap,nColors)
             counter += 1
         ### XXX TODO: add in colorbar based on fluorescence
-        axis = fig.add_axes([0.03, 0.03,0.9, 0.025])
+        # Add an axes at position rect [left, bottom, width, height] 
+        axis = fig.add_axes([0.2, 0.05,0.7, 0.025])
         m = plt.cm.ScalarMappable(cmap=cmap)
         offsetTick = 4
         m.set_array([0,nColors-1])
         cbar = fig.colorbar(cax=axis,mappable=m,orientation='horizontal',
                             ticks=[offsetTick,nColors-1-offsetTick],
-                            ticklocation='top')
+                            ticklocation='bottom')
         cbar.ax.set_xticklabels(['Unfolded', 'Folded'],fontsize=12)
         # save it
-        plt.savefig(outputDir + fileFormat.format(t),dpi=300)
+        pUtil.savefig(fig,outputDir + fileFormat.format(t),tight=False)
 
 
 def vizIOSparse(inputFile):
