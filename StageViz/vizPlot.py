@@ -37,10 +37,10 @@ def plotSingle(X,Y,c1ByStages,c2ByStages,maxX,maxY,timeIdx,cmap,nColors):
     indices=  np.array([int(min(r*nColors,nColors-1)) for r in ratio] )
     objColor = colors[indices]
     rawImage = np.zeros((maxX,maxY))
-    plt.scatter(xVals,yVals,c=objColor)
+    ax = plt.scatter(xVals,yVals,c=objColor,linewidth=0.0,alpha=0.7)
     plt.xlim([0,maxX])
     plt.ylim([0,maxY])
-
+    return ax
 
 def saveAsSubplot(XByStages,YByStages,c1ByStages,c2ByStages,outputDir,
                   fileFormat):
@@ -71,25 +71,28 @@ def saveAsSubplot(XByStages,YByStages,c1ByStages,c2ByStages,outputDir,
         counter =1
         ax = plt.subplot(1,subPlots,counter)
         plt.title('Raw')
-        cax = plt.imshow(rawImage,interpolation='sinc',cmap=cmaps.gray,
+        plt.imshow(rawImage,interpolation='sinc',cmap=cmaps.gray,
                    aspect='auto',filterrad=4,origin='lower')
         hideAxis()
         counter += 1
         for i in range(numStages):
             plt.subplot(1,subPlots,counter)
             timeIdx = min(t,nTimes[i])
-            plt.title('Filter Stage {:d}'.format(i))
-            plotSingle(XByStages[i],YByStages[i],c1ByStages[i],
-                       c2ByStages[i],maxX,maxY,timeIdx,cmap,nColors)
+            plt.title('Filter #{:d}'.format(i))
+            subAx = plotSingle(XByStages[i],YByStages[i],c1ByStages[i],
+                               c2ByStages[i],maxX,maxY,timeIdx,cmap,nColors)
             counter += 1
-        colorAx = plt.subplot(1,subPlots,subPlots)
         ### XXX TODO: add in colorbar based on fluorescence
-#        cbar = fig.colorbar(cax,ax=colorAx, ticks=[0, 1], 
-#                            orientation='vertical',use_gridspec=True)
-#        cbar.ax.set_xticklabels(['Unfolded', 'Folded'])# horizontal colorbar
-
-        pUtil.saveFigure(fig,outputDir +fileFormat.format(t),
-                         overrideIO=True)
+        axis = fig.add_axes([0.03, 0.03,0.9, 0.025])
+        m = plt.cm.ScalarMappable(cmap=cmap)
+        offsetTick = 4
+        m.set_array([0,nColors-1])
+        cbar = fig.colorbar(cax=axis,mappable=m,orientation='horizontal',
+                            ticks=[offsetTick,nColors-1-offsetTick],
+                            ticklocation='top')
+        cbar.ax.set_xticklabels(['Unfolded', 'Folded'],fontsize=12)
+        # save it
+        plt.savefig(outputDir + fileFormat.format(t),dpi=300)
 
 
 def vizIOSparse(inputFile):

@@ -11,6 +11,7 @@ import PlotUtilities as pUtil
 import matplotlib.pyplot as plt
 from vizUtil import getCheckpointFileDict,getDirs
 from vizPlot import saveAsSubplot,getAllStages
+from multiprocessing import Process # use parallel processing 
 
 import subprocess
 import argparse
@@ -30,14 +31,13 @@ def parseCmdLine():
     mOut = args.outPath
     return dataDir,mWorking,mOut
 
-
-def saveSingleTrial(mWorking,mOut,condition,trial,trialNum,fps=10,
+def saveSingleTrial(mWorking,mOut,condition,condNum,trial,trialNum,fps=10,
                     vizFileFormat="t{:05d}",ffmpegFormat = "t%05d",
                     vizExt=".png"):
         # for this condition and trial, get the directories and all the 
     # data, then save
     trialDir,allStageDir =  getDirs(mOut,condition,trial,trialNum)
-    X,Y,c1,c2 = getAllStages(fileDict,condition,trial,mWorking,i,j)
+    X,Y,c1,c2 = getAllStages(fileDict,condition,trial,mWorking,condNum,trialNum)
     command = 'ffmpeg'
     # format the ffmpeg arguments as we want them
     args = ('-i {:s} -c:v libx264 -r {:d} -y -pix_fmt yuv420p '+
@@ -48,6 +48,9 @@ def saveSingleTrial(mWorking,mOut,condition,trial,trialNum,fps=10,
     # POST: all videos saved for this trial. make the movie
     #ret = os.system(command + ' ' + args)
 
+def saveConditions(condition,condNum,conditionKeys,workDir,outDir):
+    for j,trial in enumerate(conditionKeys):
+        saveSingleTrial(workDir,outDir,condition,condNum,trial,j)
 
 if __name__ == '__main__':
     inDir,workDir,outDir = parseCmdLine()
@@ -59,8 +62,16 @@ if __name__ == '__main__':
     # each key in the innter (second) dictionary is a trial for that condition
     fileDict = getCheckpointFileDict(inDir)
     # loop through each condition and trial
-    for i,condition in enumerate(fileDict.keys()):
-        for j,trial in enumerate(fileDict[condition].keys()):
-            saveSingleTrial(workDir,outDir,condition,trial,j)
+    conditionArr = fileDict.keys()
 
+    processes= []
+    for i,condition in enumerate(conditionArr):
+        p = (Process(target=saveConditions, 
+                     args=(condition,i,fileDict[condition].keys(),
+                           workDir,outDir)))
+        processes.append(p)
+        p.start()
+    # wait until all processes are done...
+    for p in processes:
+        p.join()
 
