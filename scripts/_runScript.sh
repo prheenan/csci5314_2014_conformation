@@ -25,7 +25,8 @@ module load python/anaconda-2.1.0
 
 # POST: all needed modules are loaded
 cd $workingDir
-if [ "$reRunData" = true ]; then
+echo $reRunData
+if [ "$reRunData" = True ]; then
     cd ./Stage0_Run
     python Main.py --inPath ${defInput} --outPath ${defOutput}
 fi
