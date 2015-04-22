@@ -16,7 +16,7 @@
 
 set -euo pipefail
 IFS=$'\n\t'
-reRunData=${1:-True}
+reRunData=${1:-False}
 defInput=${2:-"/lustre/janus_scratch/pahe3165/Data-csci7000/"}
 defOutput=${3:-"/lustre/janus_scratch/pahe3165/Output-csci7000/"}
 workingDir=`pwd`

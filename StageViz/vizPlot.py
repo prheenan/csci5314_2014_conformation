@@ -1,3 +1,4 @@
+from __future__ import division
 import os
 from collections import defaultdict
 import numpy as np
@@ -13,6 +14,12 @@ import matplotlib.cm as cmaps
 import matplotlib.pyplot as plt
 from vizUtil import vizFormatIOFile,getCheckpointFileDict,getSparseData,getDirs
 import matplotlib
+from matplotlib.colors import LinearSegmentedColormap
+
+
+
+greyToGreen = cmaps.winter#LinearSegmentedColormap('greyToGreen', cdict1)
+
 
 def hideAxis():
     frame1 = plt.gca()
@@ -44,6 +51,7 @@ def plotSingle(X,Y,c1ByStages,c2ByStages,maxX,maxY,timeIdx,cmap,nColors):
 
 def saveAsSubplot(XByStages,YByStages,c1ByStages,c2ByStages,outputDir,
                   fileFormat):
+
     maxX = 0
     maxY = 0
     # number of times given by columns
@@ -59,7 +67,7 @@ def saveAsSubplot(XByStages,YByStages,c1ByStages,c2ByStages,outputDir,
         maxY = max(YByStages[i].max(),maxY)
     rawImage = np.zeros((maxY,maxX))
     normV = matplotlib.colors.Normalize()
-    cmap = plt.cm.brg
+    cmap = greyToGreen
     nColors = 64
     for t in range(maxTimes):
         fig = plt.figure(dpi=200)
@@ -88,7 +96,7 @@ def saveAsSubplot(XByStages,YByStages,c1ByStages,c2ByStages,outputDir,
         ### XXX TODO: add in colorbar based on fluorescence
         # Add an axes at position rect [left, bottom, width, height] 
         axis = fig.add_axes([0.2, 0.05,0.7, 0.025])
-        m = plt.cm.ScalarMappable(cmap=cmap)
+        m = plt.cm.ScalarMappable(cmap=greyToGreen)
         offsetTick = 4
         m.set_array([0,nColors-1])
         cbar = fig.colorbar(cax=axis,mappable=m,orientation='horizontal',
