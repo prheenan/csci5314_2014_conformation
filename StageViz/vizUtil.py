@@ -41,9 +41,16 @@ def getCheckpointFileDict(dataDir):
                     fullFilePath = pathToStages + fileName
                     if (os.path.isfile(fullFilePath)):
                         files.append(fullFilePath)
-                trialDict[trialLabel] = files
-        fileDict[conditionLabel] = trialDict
-    print(fileDict)
+                if (len(files) > 0):
+                    trialDict[trialLabel] = files
+                else:
+                    print("Couldn't find any files for Trial {:s}. Skipping.".\
+                          format(trialLabel))
+        if (len(trialDict.keys()) > 0):
+            fileDict[conditionLabel] = trialDict
+        else:
+            print("Couldn't find any files for condition {:s}. Skipping.").\
+                format(conditionLabel)
     return fileDict
 
 def getSparseData(data):
