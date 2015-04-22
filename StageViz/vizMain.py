@@ -66,7 +66,7 @@ if __name__ == '__main__':
     fileDict = getCheckpointFileDict(inDir)
     # loop through each condition and trial
     conditionArr = fileDict.keys()
-
+    exit(1)
     processes= []
     for i,condition in enumerate(conditionArr):
         func = saveConditions
