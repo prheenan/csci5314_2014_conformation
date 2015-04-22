@@ -66,12 +66,11 @@ if __name__ == '__main__':
     fileDict = getCheckpointFileDict(inDir)
     # loop through each condition and trial
     conditionArr = fileDict.keys()
-    exit(1)
     processes= []
     for i,condition in enumerate(conditionArr):
+        print("Forking off a process for condition {:s}".format(condition))
         func = saveConditions
         funcArgs = (condition,i,fileDict[condition].keys(),workDir,outDir)
-#        func(*funcArgs)
         p = (Process(target=func, args=funcArgs))
         processes.append(p)
         p.start()
