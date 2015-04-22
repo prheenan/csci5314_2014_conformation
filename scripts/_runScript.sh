@@ -1,3 +1,4 @@
+#!/bin/bash
 # Author: prheenan (patrick.heenan@colorado.edu)
 # -J: name of job
 #SBATCH -J movie_generation
@@ -17,7 +18,6 @@
 workingDir=`pwd`
 # PRE:
 # load the latest anaconda for python 2.0
-module load python/anaconda-2.1.0 
 
 # POST: all needed modules are loaded
 cd $workingDir
