@@ -43,6 +43,7 @@ def getCheckpointFileDict(dataDir):
                         files.append(fullFilePath)
                 trialDict[trialLabel] = files
         fileDict[conditionLabel] = trialDict
+    print(fileDict)
     return fileDict
 
 def getSparseData(data):
