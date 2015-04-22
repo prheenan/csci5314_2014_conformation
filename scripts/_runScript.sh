@@ -25,7 +25,6 @@ workingDir=`pwd`
 
 # POST: all needed modules are loaded
 cd $workingDir
-echo $reRunData
 if [ "$reRunData" = True ]; then
     cd ./Stage0_Run
     python Main.py --inPath ${defInput} --outPath ${defOutput}
