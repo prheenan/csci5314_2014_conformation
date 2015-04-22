@@ -5,7 +5,7 @@
 #SBATCH -A CLCSCI48300115
 #--qos: specify which (janus is def)
 #SBATCH --qos=janus
-# -t specifies runtime hours:minudtes:seconds
+# -t specifies runtime hours:minutes:seconds
 #SBATCH -t 02:00:00
 # -n: 4 cores (one per parallel process)
 #SBATCH -n 4
@@ -14,7 +14,11 @@
 #SBATCH -o %j.out
 # also can have stuff for CPUs
 
-# add "~/bin" to the path
+set -euo pipefail
+IFS=$'\n\t'
+reRunData=${1:-True}
+defInput=${2:-"/lustre/janus_scratch/pahe3165/Data-csci7000/"}
+defOutput=${3:-"/lustre/janus_scratch/pahe3165/Output-csci7000/"}
 workingDir=`pwd`
 # PRE:
 # load the latest anaconda for python 2.0

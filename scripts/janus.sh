@@ -1,4 +1,4 @@
-PATH=$PATH:$HOME/bin
+PATH=$PATH:$HOME/bin # to ensure ffmpeg is usable
 module load slurm
 module load python/anaconda-2.1.0 
 
