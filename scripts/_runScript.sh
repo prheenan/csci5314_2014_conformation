@@ -8,13 +8,13 @@
 # -t specifies runtime hours:minutes:seconds
 #SBATCH -t 12:00:00
 # -n: 4 cores (one per parallel process)
-#SBATCH -n 4
+#SBATCH -n 5
 # memory per CPU, in MB
 #SBATCH --mem-per-cpu 1000
 # temporary disk space, MB
-#SBATCH --tmp 5000
+#SBATCH --tmp 500
 # -N: number of cores
-#SBATCH -N 8
+#SBATCH -N 5
 # -o: where to put output. %j: job ID
 #SBATCH -o %j.out
 # also can have stuff for CPUs
