@@ -11,8 +11,6 @@
 #SBATCH -n 5
 # memory per CPU, in MB
 #SBATCH --mem-per-cpu 1000
-# temporary disk space, MB
-#SBATCH --tmp 500
 # -N: number of cores
 #SBATCH -N 5
 # -o: where to put output. %j: job ID
