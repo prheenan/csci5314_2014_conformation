@@ -183,13 +183,16 @@ def GetModelMain(allData,modelNums,frameRate = 0.1,plotRTD=False):
         #plot the cummulative res time dist (CRTD)
         axCRTD = fig.add_subplot(numPlots,1,pltCounter)
         axCRTD.set_yscale('log')
-        plt.title('Cummulative Residence Time Distribution [CRTD, P(t >t_u)] vs t_u is exponential')
+        fontSizeLegend = 22
+        fontSizeTitle = 25
+        plt.title('Protein unfolding time distribution is exponential',
+                  fontsize=fontSizeTitle)
         plt.errorbar(timeRtd,CRTD,rtdErr,fmt='ro',label='Experimental CRTD')
         plt.plot(timeRtd,modelProb,'b-',label=modStr)
         # re-center the plot around the real data, so that the messed up model is OK.
         plt.ylim( 0.95*np.min(CRTD),np.max(CRTD)*1.05)
-        plt.xlabel('Time (s)')
-        plt.ylabel('P(t)')
+        plt.xlabel('Unfolding time (s)',fontsize=fontSizeLegend)
+        plt.ylabel('P(t)',fontsize=fontSizeLegend)
         plt.legend()
         mSecondAxis(axCRTD,numProteins)
         nStr = plotUtil.getNStr(numProteins)

@@ -15,6 +15,7 @@ from multiprocessing import Process # use parallel processing
 
 import subprocess
 import argparse
+import subprocess
 
 def parseCmdLine():
     # get the input/output directories
@@ -31,25 +32,38 @@ def parseCmdLine():
     mOut = args.outPath
     return dataDir,mWorking,mOut
 
-def generateMovie(args):
-    command = 'ffmpeg'
-    return os.system(command + ' ' + args)
-
-def saveSingleTrial(mWorking,mOut,condition,condNum,trial,trialNum,fps=10,
-                    vizFileFormat="t{:05d}",ffmpegFormat = "t%05d",
+def generateMovie(allStageDir,condition,trialNum,vizFileFormat,fps=10,
+                  ffmpegFormat = "t%05d",
                     vizExt=".png"):
+    command = 'ffmpeg'
+    mInput = allStageDir+ffmpegFormat+vizExt
+    argStr = ['-i','{:s}'.format(mInput),
+              '-c:v','libx264',
+              '-r','{:d}'.format(fps),
+              '-s','2048x1024',
+              '{:s}1_movie_{:s}_trial_{:d}.mov'.format(allStageDir,condition,
+                                                       trialNum)]
+    try:
+        allArgs = [command]
+        allArgs.extend(argStr)
+        print(allArgs)
+        subprocess.call(allArgs)
+    except OSError as e:
+        print("Nonfatal: Couldn't use ffmpeg on {:s}".format(args))
+        print(e)
+
+def saveSingleTrial(mWorking,mOut,condition,condNum,trial,trialNum,
+                    vizFileFormat="t{:05d}",generatePNGs=True):
         # for this condition and trial, get the directories and all the 
     # data, then save
     trialDir,allStageDir =  getDirs(mOut,condition,trial,trialNum)
-    X,Y,c1,c2 = getAllStages(fileDict,condition,trial,mWorking,condNum,trialNum)
+    if (generatePNGs):
+        X,Y,c1,c2 = getAllStages(fileDict,condition,trial,mWorking,
+                                 condNum,trialNum)
+        saveAsSubplot(X,Y,c1,c2,allStageDir,vizFileFormat)
     # format the ffmpeg arguments as we want them
-    argStr = ('-i {:s} -c:v libx264 -r {:d} -y -pix_fmt yuv420p '+
-              '{:s}1_movie_{:s}_trial_{:d}.mov').\
-        format(allStageDir+ffmpegFormat+vizExt,fps,allStageDir,
-               condition,trialNum)
-    saveAsSubplot(X,Y,c1,c2,allStageDir,vizFileFormat)
     # POST: all videos saved for this trial. make the movie
-    generateMovie(argStr)
+    generateMovie(allStageDir,condition,trialNum,vizFileFormat)
 
 def saveConditions(condition,condNum,conditionKeys,workDir,outDir):
     for j,trial in enumerate(conditionKeys):
@@ -74,7 +88,7 @@ if __name__ == '__main__':
         p = (Process(target=func, args=funcArgs))
         processes.append(p)
         p.start()
-    # wait until all processes are done...
+    #wait until all processes are done...
     for p in processes:
         p.join()
 

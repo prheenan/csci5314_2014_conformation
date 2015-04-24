@@ -46,7 +46,7 @@ def plotStats(numBars,numTrials,trialStats):
         xVals = tickLabelX+wid*t
         mColor = next(colorCycler)
         mLabel = trials[t]
-        ax.bar(xVals[0:numVals],meanVals,width=wid,yerr=0.2*stdVals,
+        ax.bar(xVals[0:numVals],meanVals,yerr=0.2*stdVals,
                color=mColor,error_kw = barDict,align='center',label=mLabel)
         axRSQ.bar(xVals[numVals],RSQ,width=wid,color=mColor,align='center',
                   label=mLabel)
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     # can 'force' a re-calulation of the data
     forceStage1 = False
     forceStage2 = False
-    forceStage3 = False
+    forceStage3 = True
     # the numbers in the modeling file, determining which models we will use..
     modelsToUse = [4]
     # look for 'cached' files, by previous stages, speeding up everything a lot.
@@ -105,11 +105,11 @@ if __name__ == '__main__':
         trialDiff = []
         Utilities.globalIO.setTrial(t)
         stage3Folder = (Utilities.globalIO.getOutputDir([],"") +
-                        Utilities.CheckpointDir)
+                        "Post_Stage3_Analysis/").\
+                        replace("//","/")
         # stage 3 recquires knowing which model we will use...
         # XXX fix this to allow for different models? Pass as a param to model.
-        cacheFileS3 = stage3Folder + Utilities.getModelFile(fileNamesStage3[0],
-                                                            1) + extFile
+        cacheFileS3 = stage3Folder + "ModelParams4.npy"
         # if we have stage3, then just skip to the final ....
         if (not Utilities.dirExists(cacheFileS3)
             or forceStage3):

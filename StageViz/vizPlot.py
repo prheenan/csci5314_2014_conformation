@@ -16,10 +16,7 @@ from vizUtil import vizFormatIOFile,getCheckpointFileDict,getSparseData,getDirs
 import matplotlib
 from matplotlib.colors import LinearSegmentedColormap
 
-
-
 greyToGreen = cmaps.winter#LinearSegmentedColormap('greyToGreen', cdict1)
-
 
 def hideAxis():
     frame1 = plt.gca()
@@ -70,7 +67,7 @@ def saveAsSubplot(XByStages,YByStages,c1ByStages,c2ByStages,outputDir,
     cmap = greyToGreen
     nColors = 64
     for t in range(maxTimes):
-        fig = plt.figure(dpi=200)
+        fig = plt.figure(dpi=500,figsize=(12,8))
         rawImage[:,:] = 0
         xVals = XByStages[0][:,t]
         goodIdx = xVals.nonzero()
