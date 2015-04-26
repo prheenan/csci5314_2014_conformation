@@ -38,9 +38,10 @@ def generateMovie(allStageDir,condition,trialNum,vizFileFormat,fps=10,
     command = 'ffmpeg'
     mInput = allStageDir+ffmpegFormat+vizExt
     argStr = ['-i','{:s}'.format(mInput),
-              '-c:v','libx264',
-              '-r','{:d}'.format(fps),
-              '-s','2048x1024',
+              '-c:v','mpeg4', # use mpeg 4 codec
+              '-y', # force overwrite.
+              '-r','{:d}'.format(fps), # framerate
+              '-s','2048x1024', # size, per tim
               '{:s}1_movie_{:s}_trial_{:d}.mov'.format(allStageDir,condition,
                                                        trialNum)]
     try:

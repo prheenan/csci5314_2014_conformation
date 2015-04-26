@@ -7,7 +7,7 @@
 #SBATCH --qos=janus
 # -t specifies runtime hours:minutes:seconds
 #SBATCH -t 12:00:00
-# -n: 4 cores (one per parallel process)
+# -n: 5 cores (one per parallel process)
 #SBATCH -n 5
 # memory per CPU, in MB
 #SBATCH --mem-per-cpu 1000
