@@ -42,6 +42,13 @@ def generateMovie(allStageDir,condition,trialNum,vizFileFormat,fps=10,
               '-y', # force overwrite.
               '-r','{:d}'.format(fps), # framerate
               '-s','2048x1024', # size, per tim
+              '-mbd','rd',
+              '-flags','+mv4+aic',
+              '-trellis','2',
+              '-cmp','2',
+              '-subcmp','2',
+              '-g','300',
+#              '-pass' '1/2',
               '{:s}1_movie_{:s}_trial_{:d}.mov'.format(allStageDir,condition,
                                                        trialNum)]
     try:
@@ -54,7 +61,7 @@ def generateMovie(allStageDir,condition,trialNum,vizFileFormat,fps=10,
         print(e)
 
 def saveSingleTrial(mWorking,mOut,condition,condNum,trial,trialNum,
-                    vizFileFormat="t{:05d}",generatePNGs=True):
+                    vizFileFormat="t{:05d}",generatePNGs=False):
         # for this condition and trial, get the directories and all the 
     # data, then save
     trialDir,allStageDir =  getDirs(mOut,condition,trial,trialNum)
